@@ -1,0 +1,486 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NeuroAssist{% endblock %} - Clinical Decision Support</title>
+  <meta name="description" content="{% block meta_description %}NeuroAssist - AI-powered brain tumor diagnostic support for neuro-oncologists{% endblock %}">
+
+  <style>
+    /* ================================================================
+       NEUROASSIST â€” Design System (Hospital Theme)
+       ================================================================ */
+
+    /* â”€â”€ Custom properties â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    :root {
+      --blue-dark:    #143b66;
+      --blue-mid:     #2a78c8;
+      --blue-light:   #eef5fb;
+      --blue-border:  #c8d8e8;
+      --blue-soft:    #dfeaf6;
+      --white:        #FFFFFF;
+      --page-bg:      #edf3f8;
+      --panel-bg:     rgba(255,255,255,0.86);
+      --text-dark:    #14283f;
+      --text-mid:     #496784;
+      --text-muted:   #738aa4;
+      --warn-bg:      #FFF4E0;
+      --warn-text:    #7A4F00;
+      --ok-bg:        #EAF6EF;
+      --ok-text:      #1A6A3A;
+      --danger-text:  #A02020;
+      --sidebar-w:    244px;
+      --nav-h:        64px;
+      --right-w:      280px;
+      --radius:       18px;
+      --radius-sm:    12px;
+      --shadow-card:  0 18px 40px rgba(17, 39, 68, 0.08);
+      --shadow-soft:  0 10px 24px rgba(17, 39, 68, 0.05);
+      --font:         "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+
+    /* â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at top left, rgba(42,120,200,0.12), transparent 34%),
+        radial-gradient(circle at top right, rgba(20,59,102,0.08), transparent 28%),
+        var(--page-bg);
+      color: var(--text-dark);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    a { color: var(--blue-mid); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* â”€â”€ Top nav bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .nav-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: linear-gradient(120deg, rgba(20,59,102,0.96), rgba(34,95,159,0.94));
+      backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 12px 32px rgba(12, 28, 50, 0.18);
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #7fc7ff;
+      box-shadow: 0 0 0 6px rgba(127,199,255,0.18);
+    }
+    .nav-spacer { flex: 1; }
+    .nav-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.72);
+    }
+    .nav-badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* â”€â”€ Layout shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      padding-top: var(--nav-h);
+    }
+
+    /* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: rgba(255,255,255,0.74);
+      backdrop-filter: blur(18px);
+      border-right: 1px solid rgba(200,216,232,0.78);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 14px;
+      position: fixed;
+      top: var(--nav-h);
+      bottom: 0;
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 0 6px;
+      margin-bottom: 8px;
+    }
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      padding: 10px 10px 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text-mid);
+      border-radius: 14px;
+      transition: background 0.18s, color 0.18s, transform 0.18s, box-shadow 0.18s;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+    .sidebar-link:hover,
+    .sidebar-link.active {
+      background: rgba(42,120,200,0.1);
+      color: var(--blue-dark);
+      border-color: rgba(42,120,200,0.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+      text-decoration: none;
+    }
+    .sidebar-link .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: var(--blue-light);
+      border: 1px solid var(--blue-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--blue-dark);
+      flex-shrink: 0;
+    }
+    .sidebar-divider {
+      border: none;
+      border-top: 1px solid rgba(200,216,232,0.72);
+      margin: 10px 10px;
+    }
+
+    /* â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 30px clamp(18px, 3vw, 34px) 34px;
+      min-height: calc(100vh - var(--nav-h));
+    }
+
+    .main-content > * {
+      animation: page-enter 0.45s ease both;
+    }
+
+    /* â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--blue-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      padding: 22px;
+    }
+    .card + .card { margin-top: 16px; }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    /* â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+      font-family: var(--font);
+      box-shadow: var(--shadow-soft);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue-dark), #245f9f);
+      color: #FFF;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #18477b, #2a78c8);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.88);
+      color: var(--blue-mid);
+      border-color: var(--blue-border);
+    }
+    .btn-secondary:hover {
+      background: var(--blue-light);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* â”€â”€ Forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+      margin-bottom: 5px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      border: 1px solid var(--blue-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.92);
+      color: var(--text-dark);
+      font-family: var(--font);
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 4px rgba(42,120,200,0.14);
+      background: #fff;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-error {
+      color: var(--danger-text);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    /* â”€â”€ Progress bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .progress-bar {
+      height: 8px;
+      background: rgba(200,216,232,0.72);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue-mid), #66a9ea);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* â”€â”€ Badges / Pills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 99px;
+    }
+    .badge-info    { background: var(--blue-light); color: var(--blue-dark); }
+    .badge-warn    { background: var(--warn-bg);   color: var(--warn-text); }
+    .badge-ok      { background: var(--ok-bg);     color: var(--ok-text);  }
+    .badge-danger  { background: #FDE8E8;           color: var(--danger-text); }
+
+    /* â”€â”€ Flash / alert banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .alert {
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .alert-warn   { background: var(--warn-bg); color: var(--warn-text); border: 1px solid #F5D99A; }
+    .alert-ok     { background: var(--ok-bg);   color: var(--ok-text);   border: 1px solid #A5D9BC; }
+    .alert-danger { background: #FDE8E8;         color: var(--danger-text); border: 1px solid #F5B8B8; }
+
+    /* â”€â”€ Page heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .page-heading {
+      font-size: clamp(22px, 2vw, 28px);
+      font-weight: 700;
+      color: var(--blue-dark);
+      margin-bottom: 6px;
+      letter-spacing: -0.03em;
+    }
+    .page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* â”€â”€ Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .text-muted { color: var(--text-muted); }
+    .text-mid   { color: var(--text-mid);   }
+    .text-dark  { color: var(--text-dark);  }
+    .text-sm    { font-size: 12px; }
+    .text-xs    { font-size: 11px; }
+    .mt-4  { margin-top: 4px;  }
+    .mt-8  { margin-top: 8px;  }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .flex  { display: flex; }
+    .items-center { align-items: center; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .flex-1 { flex: 1; }
+
+    /* â”€â”€ Spinner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--blue-border);
+      border-top-color: var(--blue-mid);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes page-enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* â”€â”€ Toast notification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--blue-dark);
+      color: #FFF;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* â”€â”€ Responsive (tablet) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 48px;
+        overflow: hidden;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .sidebar-link span:not(.icon) { display: none; }
+      .sidebar-label { display: none; }
+      .main-content { margin-left: 48px; }
+    }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<!-- Top nav bar -->
+<nav class="nav-bar">
+  <div class="nav-logo">
+    <div class="dot"></div>
+    NeuroAssist
+  </div>
+  <span class="nav-spacer"></span>
+  <span class="nav-meta">Clinical Decision Support</span>
+  <span class="nav-badge">Assistive Only</span>
+</nav>
+
+<!-- Layout shell -->
+<div class="layout">
+
+  <!-- Left sidebar -->
+  <aside class="sidebar">
+    {% set current_endpoint = request.endpoint or '' %}
+    <div class="sidebar-label">Navigation</div>
+    <a href="{{ url_for('session.index') }}" class="sidebar-link {% if current_endpoint == 'session.index' %}active{% endif %}">
+      <span class="icon">DB</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('session.records_view') }}" class="sidebar-link {% if current_endpoint == 'session.records_view' %}active{% endif %}">
+      <span class="icon">RC</span>
+      <span>Records</span>
+    </a>
+    <hr class="sidebar-divider">
+    <div class="sidebar-label">Current Session</div>
+    {% if session_id is defined %}
+    <a href="/session/{{ session_id }}" class="sidebar-link {% if current_endpoint == 'session.session_view' %}active{% endif %}">
+      <span class="icon">SE</span>
+      <span>Active Session</span>
+    </a>
+    <a href="/report/{{ session_id }}" class="sidebar-link {% if current_endpoint in ['report.report_view', 'report.report_print_view', 'report.annotated_slices_view'] %}active{% endif %}">
+      <span class="icon">RP</span>
+      <span>Report</span>
+    </a>
+    {% else %}
+    <span class="sidebar-link text-muted">
+      <span class="icon">SE</span>
+      <span>No session</span>
+    </span>
+    {% endif %}
+    <hr class="sidebar-divider">
+    <div class="sidebar-label">System</div>
+    <span class="sidebar-link text-muted text-sm">
+      <span class="icon">NA</span>
+      <span>NeuroAssist v1.0</span>
+    </span>
+  </aside>
+
+  <!-- Main content area -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<!-- Toast notification container -->
+<div id="toast"></div>
+
+<script>
+  /* â”€â”€ Global toast utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  function showToast(msg, duration = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

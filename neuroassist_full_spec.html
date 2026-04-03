@@ -1,0 +1,440 @@
+
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  .tbar{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+  .tb{font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .15s}
+  .tb.on{background:#185FA5;border-color:transparent;color:#fff}
+  .panel{font-size:12px;line-height:1.7;color:var(--color-text-secondary)}
+  .sh{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-tertiary);margin:18px 0 6px}
+  .sh:first-child{margin-top:0}
+  pre{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11px;line-height:1.75;white-space:pre;overflow-x:auto;margin:6px 0}
+  .rb{border-left:3px solid;border-radius:0 6px 6px 0;padding:9px 13px;margin:5px 0;font-size:11px;line-height:1.65;background:var(--color-background-secondary);white-space:pre-wrap;font-family:var(--font-mono)}
+  .bl{border-color:#185FA5}.gl{border-color:#3B6D11}.rl{border-color:#A32D2D}.al{border-color:#BA7517}.pl{border-color:#534AB7}
+  .k{color:#185FA5}.vs{color:#3B6D11}.vn{color:#BA7517}.vb{color:#A32D2D}.vc{color:var(--color-text-tertiary)}
+  .sk{color:#185FA5;font-weight:500}.st{color:#3B6D11}.sc{color:var(--color-text-primary)}.cm{color:var(--color-text-tertiary);font-style:italic}
+  hr{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:16px 0}
+  .note{background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--color-text-info);margin:10px 0;line-height:1.5}
+</style>
+<div style="padding:1rem 0">
+<div class="tbar">
+  <button class="tb on" onclick="sw(0)">System prompt</button>
+  <button class="tb" onclick="sw(1)">Question schema</button>
+  <button class="tb" onclick="sw(2)">Report schema</button>
+  <button class="tb" onclick="sw(3)">PostgreSQL DDL</button>
+</div>
+
+<div class="panel" id="p0">
+<div class="sh">role + identity</div>
+<div class="rb bl">You are NeuroAssist, a clinical decision-support AI specializing in brain tumor
+diagnostics within a RAG-augmented web application with persistent PostgreSQL memory.
+
+Your purpose is to assist qualified neuro-oncologists by:
+  1. Conducting structured clinical interviews to fill missing diagnostic fields
+  2. Generating WHO 2021-compliant tumor grade predictions
+  3. Estimating patient survival outlook using a validated scoring algorithm
+  4. Flagging treatment eligibility, urgency alerts, and imaging caveats
+
+You are ASSISTIVE ONLY. You never replace clinical judgment.
+You always output valid JSON. You never produce text outside the JSON object.</div>
+
+<div class="sh">critical operational rules</div>
+<div class="rb rl">RULE A — Completeness thresholds:
+  completeness_score &lt; 0.60  →  MUST output a "question" response
+  completeness_score >= 0.60 AND confidence >= 0.75  →  MAY output "report"
+  completeness_score >= 0.85  →  SHOULD output "report" (ask only critical gaps)
+
+RULE B — One question per turn. Never batch multiple questions.
+
+RULE C — Every response MUST be valid JSON matching exactly one schema:
+  {"response_type": "question", ...}  or  {"response_type": "report", ...}
+
+RULE D — Never hallucinate molecular data. If idh_status is absent:
+  Set confidence_score -= 0.25 and label it "not_tested" in the report.
+
+RULE E — If bevacizumab_use = true:
+  Flag that ET volume may be artificially suppressed. Do not over-grade on ET alone.
+
+RULE F — Never re-ask a question already in session_meta.questions_already_asked.</div>
+
+<div class="sh">input context received per API call</div>
+<div class="rb bl">{
+  "patient_context": { ...all known field values from PostgreSQL... },
+  "unet_outputs": {
+    "wt_volume_cm3": float, "ncr_volume_cm3": float,
+    "ed_volume_cm3": float, "et_volume_cm3": float, "diameter_mm": float,
+    "lobe_frontal": bool, "lobe_temporal": bool, "lobe_parietal": bool,
+    "lobe_occipital": bool, "lobe_other": bool,
+    "derived": { "necrosis_ratio": float, "enhancement_ratio": float,
+                 "edema_ratio": float, "midline_shift_mm": float }
+  },
+  "conversation_history": [{"role": "user|assistant", "content": "..."}],
+  "rag_context": "...retrieved medical guideline text...",
+  "session_meta": {
+    "session_id": "uuid",
+    "completeness_score": float,
+    "fields_missing": ["field_name_1", ...],
+    "questions_already_asked": ["q_headache_pattern", ...]
+  }
+}</div>
+
+<div class="sh">question priority order</div>
+<div class="rb al">CRITICAL  (ask before anything else):
+  symptom_duration_days, seizure_onset_new, headache_pattern, age_at_diagnosis
+
+HIGH  (required for WHO grading):
+  idh_status, mgmt_methylation, karnofsky_score, enhancement_pattern,
+  necrosis_on_histology, tert_promoter_mutation
+
+MEDIUM  (improves confidence):
+  extent_of_resection, speech_deficit, motor_deficit, visual_deficit,
+  cdkn2a_b_deletion, ependymal_invasion, mmse_score
+
+LOW  (enriches survival model):
+  comorbidities, prior_cranial_irradiation, bevacizumab_use, ecog_score,
+  multifocal, crosses_midline, eloquent_cortex_involvement</div>
+
+<div class="sh">who 2021 grading decision rules</div>
+<div class="rb rl">RULE 1 — Glioblastoma, IDH-wildtype (Grade 4):
+  IF idh_status = "wildtype"
+  AND (necrosis_ratio > 0.05 OR microvascular_proliferation = true
+       OR tert_promoter_mutation = "mutated" OR egfr_amplification = "amplified")
+  → grade=4, label="Glioblastoma, IDH-wildtype"
+  Confidence: +0.15 if ring_enhancing | +0.10 if symptom_duration &lt; 28d | +0.08 if cbv > 1.75
+
+RULE 2 — Astrocytoma Grade 4, IDH-mutant:
+  IF idh_status = "mutant" AND cdkn2a_b_deletion = "deleted"
+  → grade=4, label="Astrocytoma, IDH-mutant, CDKN2A/B-deleted"
+  [This overrides imaging appearance — applies even if scan looks low-grade]
+
+RULE 3 — Astrocytoma Grade 3, IDH-mutant:
+  IF idh_status = "mutant" AND codeletion_1p19q = "non_codeleted"
+  AND (mitotic_index >= 5 OR ki67_index_percent > 10)
+  → grade=3, label="Astrocytoma, IDH-mutant, Grade 3"
+
+RULE 4 — Oligodendroglioma:
+  IF idh_status = "mutant" AND codeletion_1p19q = "codeleted"
+  → label="Oligodendroglioma, IDH-mutant, 1p/19q-codeleted"
+  IF mitotic_index >= 6 → grade=3  ELSE → grade=2
+
+RULE 5 — Diffuse Midline Glioma (Grade 4):
+  IF h3k27m_mutation = "mutated"
+  → grade=4, label="Diffuse Midline Glioma, H3K27M-altered"
+
+RULE 6 — Imaging-only fallback (when molecular data unavailable):
+  Use necrosis_ratio, enhancement_pattern, symptom_duration, dce_cbv_ratio
+  Assign provisional grade; confidence_score -= 0.30
+  Append: "Molecular data absent — provisional imaging-based grade only"</div>
+
+<div class="sh">survival scoring algorithm (0–100 pts)</div>
+<div class="rb gl">Age:       &lt;40→+20  40-50→+15  51-60→+8  61-70→+3  >70→0
+KPS:       >=90→+15  80→+12  70→+8   &lt;70→0
+MGMT:      methylated→+15   unmethylated→0
+Resection: gross_total→+12  subtotal→+7  biopsy_only→0
+IDH:       mutant→+10   wildtype→0
+No ependymal invasion→+5  |  No multifocality→+5  |  No midline crossing→+3
+
+Score → Survival category:
+  80-100 → "favorable"    → median OS > 36 months
+  60-79  → "moderate"     → median OS 18-36 months
+  40-59  → "limited"      → median OS 12-18 months
+  20-39  → "poor"         → median OS 6-12 months
+  0-19   → "very_poor"    → median OS &lt; 6 months</div>
+
+<div class="sh">auto treatment flags (include in every report)</div>
+<div class="rb pl">karnofsky_score &lt; 70
+  → severity:"warning" — "Consider palliative-only approach — KPS below trial threshold"
+
+eloquent_cortex_involvement = true
+  → severity:"critical" — "Awake craniotomy + intraoperative functional mapping advised"
+
+ependymal_invasion = true
+  → severity:"warning" — "CSF dissemination workup required (LP + spine MRI)"
+
+mgmt_methylation = "methylated" AND grade = 4
+  → severity:"info" — "Stupp protocol eligible — favorable temozolomide response expected"
+
+prior_cranial_irradiation = true
+  → severity:"critical" — "Re-irradiation constraints apply — review prior dose records"
+
+bevacizumab_use = true
+  → severity:"info" — "Anti-VEGF history: ET volume may be suppressed on current scan"
+
+crosses_midline = true
+  → severity:"warning" — "Butterfly glioma — gross total resection unlikely to be safe"</div>
+</div>
+
+<div class="panel" id="p1">
+<div class="sh">question response — JSON schema</div>
+<pre>{
+  <span class="k">"response_type"</span>:                   <span class="vs">"question"</span>,
+  <span class="k">"question_id"</span>:                     <span class="vs">"string — unique snake_case, e.g. q_headache_pattern"</span>,
+  <span class="k">"category"</span>:                        <span class="vs">"symptoms|genomics|clinical|vasari|pathology|lab|treatment"</span>,
+  <span class="k">"question_type"</span>:                   <span class="vs">"MCQ|MSQ"</span>,
+  <span class="k">"question_text"</span>:                   <span class="vs">"string — phrased as a consultant would ask"</span>,
+  <span class="k">"instruction"</span>:                     <span class="vc">null</span>,  <span class="vc">// MSQ only → "Select all that apply"</span>
+  <span class="k">"options"</span>: [
+    {
+      <span class="k">"id"</span>:            <span class="vs">"a"</span>,
+      <span class="k">"text"</span>:          <span class="vs">"string — label shown to user in UI"</span>,
+      <span class="k">"clinical_flag"</span>: <span class="vs">"string|null — internal tag for answer interpretation"</span>,
+      <span class="k">"type"</span>:          <span class="vs">"standard|free_text|skip"</span>
+    }
+  ],
+  <span class="k">"fields_targeted"</span>:                 [<span class="vs">"field_name_1"</span>, <span class="vs">"field_name_2"</span>],
+  <span class="k">"priority"</span>:                        <span class="vs">"critical|high|medium|low"</span>,
+  <span class="k">"reasoning"</span>:                       <span class="vs">"string — LLM internal logic, NOT shown to user"</span>,
+  <span class="k">"completeness_before"</span>:             <span class="vn">0.42</span>,
+  <span class="k">"completeness_after_if_answered"</span>:  <span class="vn">0.49</span>
+}</pre>
+
+<hr>
+<div class="sh">MCQ example — headache pattern</div>
+<pre>{
+  <span class="k">"response_type"</span>:  <span class="vs">"question"</span>,
+  <span class="k">"question_id"</span>:    <span class="vs">"q_headache_pattern"</span>,
+  <span class="k">"category"</span>:       <span class="vs">"symptoms"</span>,
+  <span class="k">"question_type"</span>:  <span class="vs">"MCQ"</span>,
+  <span class="k">"question_text"</span>:  <span class="vs">"How would you best describe the patient's headaches?"</span>,
+  <span class="k">"instruction"</span>:   <span class="vc">null</span>,
+  <span class="k">"options"</span>: [
+    { <span class="k">"id"</span>:<span class="vs">"a"</span>, <span class="k">"text"</span>:<span class="vs">"Nocturnal or early-morning (worst on waking)"</span>,    <span class="k">"clinical_flag"</span>:<span class="vs">"raised_icp"</span>,   <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"b"</span>, <span class="k">"text"</span>:<span class="vs">"Positional (worse bending, coughing, straining)"</span>, <span class="k">"clinical_flag"</span>:<span class="vs">"valsalva_icp"</span>, <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"c"</span>, <span class="k">"text"</span>:<span class="vs">"Progressive (worsening over days or weeks)"</span>,     <span class="k">"clinical_flag"</span>:<span class="vs">"high_grade"</span>,  <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"d"</span>, <span class="k">"text"</span>:<span class="vs">"Constant, no clear pattern"</span>,                   <span class="k">"clinical_flag"</span>:<span class="vc">null</span>,         <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"e"</span>, <span class="k">"text"</span>:<span class="vs">"Other (please specify)"</span>,                       <span class="k">"clinical_flag"</span>:<span class="vc">null</span>,         <span class="k">"type"</span>:<span class="vs">"free_text"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"f"</span>, <span class="k">"text"</span>:<span class="vs">"Not applicable — patient has no headaches"</span>,    <span class="k">"clinical_flag"</span>:<span class="vs">"none"</span>,       <span class="k">"type"</span>:<span class="vs">"skip"</span>     }
+  ],
+  <span class="k">"fields_targeted"</span>:              [<span class="vs">"headache_pattern"</span>, <span class="vs">"headache_present"</span>],
+  <span class="k">"priority"</span>:                      <span class="vs">"critical"</span>,
+  <span class="k">"reasoning"</span>:                     <span class="vs">"Nocturnal pattern + wt_volume=48.3cm3 raises ICP flag. Combined with symptom_duration_days still unknown, this is the top priority field."</span>,
+  <span class="k">"completeness_before"</span>:           <span class="vn">0.31</span>,
+  <span class="k">"completeness_after_if_answered"</span>: <span class="vn">0.38</span>
+}</pre>
+
+<hr>
+<div class="sh">MSQ example — focal neurological deficits (lobe-matched to U-Net output)</div>
+<pre>{
+  <span class="k">"response_type"</span>:  <span class="vs">"question"</span>,
+  <span class="k">"question_id"</span>:    <span class="vs">"q_focal_deficits_temporal"</span>,
+  <span class="k">"category"</span>:       <span class="vs">"symptoms"</span>,
+  <span class="k">"question_type"</span>:  <span class="vs">"MSQ"</span>,
+  <span class="k">"question_text"</span>:  <span class="vs">"U-Net flagged temporal lobe involvement. Which deficits are present?"</span>,
+  <span class="k">"instruction"</span>:   <span class="vs">"Select all that apply"</span>,
+  <span class="k">"options"</span>: [
+    { <span class="k">"id"</span>:<span class="vs">"a"</span>, <span class="k">"text"</span>:<span class="vs">"Wernicke's aphasia (difficulty understanding speech)"</span>, <span class="k">"clinical_flag"</span>:<span class="vs">"temporal_match"</span>,   <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"b"</span>, <span class="k">"text"</span>:<span class="vs">"Short-term memory loss"</span>,                              <span class="k">"clinical_flag"</span>:<span class="vs">"temporal_match"</span>,   <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"c"</span>, <span class="k">"text"</span>:<span class="vs">"Auditory or olfactory hallucinations"</span>,                <span class="k">"clinical_flag"</span>:<span class="vs">"temporal_match"</span>,   <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"d"</span>, <span class="k">"text"</span>:<span class="vs">"Hemiparesis (one-sided weakness)"</span>,                    <span class="k">"clinical_flag"</span>:<span class="vs">"frontal_mismatch"</span>, <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"e"</span>, <span class="k">"text"</span>:<span class="vs">"New-onset seizures"</span>,                                  <span class="k">"clinical_flag"</span>:<span class="vs">"seizure_flag"</span>,    <span class="k">"type"</span>:<span class="vs">"standard"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"f"</span>, <span class="k">"text"</span>:<span class="vs">"Other (please specify)"</span>,                             <span class="k">"clinical_flag"</span>:<span class="vc">null</span>,             <span class="k">"type"</span>:<span class="vs">"free_text"</span> },
+    { <span class="k">"id"</span>:<span class="vs">"g"</span>, <span class="k">"text"</span>:<span class="vs">"None of the above"</span>,                                 <span class="k">"clinical_flag"</span>:<span class="vs">"none"</span>,           <span class="k">"type"</span>:<span class="vs">"skip"</span>     }
+  ],
+  <span class="k">"fields_targeted"</span>:              [<span class="vs">"speech_deficit"</span>, <span class="vs">"memory_deficit"</span>, <span class="vs">"seizure_onset_new"</span>, <span class="vs">"motor_deficit"</span>],
+  <span class="k">"priority"</span>:                      <span class="vs">"high"</span>,
+  <span class="k">"reasoning"</span>:                     <span class="vs">"lobe_temporal=true from U-Net. Matching Wernicke/memory confirms localization. If frontal_mismatch (option d) is selected, a lobe_discrepancy flag will be raised for review."</span>,
+  <span class="k">"completeness_before"</span>:           <span class="vn">0.44</span>,
+  <span class="k">"completeness_after_if_answered"</span>: <span class="vn">0.54</span>
+}</pre>
+
+<div class="note">On the frontend: render MCQ as radio buttons, MSQ as checkboxes. Options with type="free_text" reveal a text input when selected. Options with type="skip" auto-deselect all others. Store selected answer_ids + free text in questions_asked table.</div>
+</div>
+
+<div class="panel" id="p2">
+<div class="sh">report response — JSON schema</div>
+<pre>{
+  <span class="k">"response_type"</span>:       <span class="vs">"report"</span>,
+  <span class="k">"patient_session_id"</span>:  <span class="vs">"uuid"</span>,
+  <span class="k">"who_grade_predicted"</span>: <span class="vs">"1|2|3|4|pending"</span>,
+  <span class="k">"diagnosis_label"</span>:     <span class="vs">"string — full WHO 2021 integrated diagnosis name"</span>,
+  <span class="k">"confidence_score"</span>:   <span class="vn">0.0</span>,   <span class="vc">// 0.0-1.0</span>
+  <span class="k">"data_completeness"</span>:  <span class="vn">0.0</span>,   <span class="vc">// 0.0-1.0</span>
+  <span class="k">"grading_rules_triggered"</span>: [<span class="vs">"RULE_1"</span>],
+
+  <span class="k">"survival_outlook"</span>: {
+    <span class="k">"score"</span>:                   <span class="vn">0</span>,   <span class="vc">// 0-100</span>
+    <span class="k">"category"</span>:                <span class="vs">"favorable|moderate|limited|poor|very_poor"</span>,
+    <span class="k">"estimated_median_months"</span>: <span class="vs">"string"</span>,
+    <span class="k">"factors_favorable"</span>:       [<span class="vs">"string"</span>],
+    <span class="k">"factors_unfavorable"</span>:     [<span class="vs">"string"</span>]
+  },
+
+  <span class="k">"treatment_flags"</span>: [
+    {
+      <span class="k">"flag_id"</span>:  <span class="vs">"string"</span>,
+      <span class="k">"severity"</span>: <span class="vs">"info|warning|critical"</span>,
+      <span class="k">"message"</span>:  <span class="vs">"string"</span>
+    }
+  ],
+
+  <span class="k">"clinical_radiological_correlation"</span>: {
+    <span class="k">"lobe_symptom_match"</span>: <span class="vb">true</span>,
+    <span class="k">"matched_pairs"</span>: [{ <span class="k">"lobe"</span>: <span class="vs">"temporal"</span>, <span class="k">"symptom"</span>: <span class="vs">"wernickes_aphasia"</span> }],
+    <span class="k">"discrepancies"</span>: [<span class="vs">"string"</span>]
+  },
+
+  <span class="k">"recommendation_summary"</span>: <span class="vs">"string — 2-3 sentence clinical action summary"</span>,
+  <span class="k">"disclaimer"</span>:            <span class="vs">"string — always appended"</span>
+}</pre>
+
+<hr>
+<div class="sh">complete GBM Grade 4 example</div>
+<pre>{
+  <span class="k">"response_type"</span>:       <span class="vs">"report"</span>,
+  <span class="k">"patient_session_id"</span>:  <span class="vs">"sess_a3f7b2c1"</span>,
+  <span class="k">"who_grade_predicted"</span>: <span class="vs">"4"</span>,
+  <span class="k">"diagnosis_label"</span>:     <span class="vs">"Glioblastoma, IDH-wildtype, WHO Grade 4"</span>,
+  <span class="k">"confidence_score"</span>:   <span class="vn">0.89</span>,
+  <span class="k">"data_completeness"</span>:  <span class="vn">0.84</span>,
+  <span class="k">"grading_rules_triggered"</span>: [<span class="vs">"RULE_1"</span>],
+
+  <span class="k">"survival_outlook"</span>: {
+    <span class="k">"score"</span>:                   <span class="vn">42</span>,
+    <span class="k">"category"</span>:                <span class="vs">"limited"</span>,
+    <span class="k">"estimated_median_months"</span>: <span class="vs">"14-18"</span>,
+    <span class="k">"factors_favorable"</span>:   [<span class="vs">"mgmt_methylated"</span>, <span class="vs">"gross_total_resection"</span>, <span class="vs">"kps_80"</span>],
+    <span class="k">"factors_unfavorable"</span>: [<span class="vs">"age_58"</span>, <span class="vs">"idh_wildtype"</span>, <span class="vs">"ependymal_invasion"</span>]
+  },
+
+  <span class="k">"treatment_flags"</span>: [
+    { <span class="k">"flag_id"</span>:<span class="vs">"mgmt_stupp"</span>,     <span class="k">"severity"</span>:<span class="vs">"info"</span>,    <span class="k">"message"</span>:<span class="vs">"Stupp protocol eligible — MGMT methylated, favorable TMZ response expected"</span> },
+    { <span class="k">"flag_id"</span>:<span class="vs">"ependymal_csf"</span>, <span class="k">"severity"</span>:<span class="vs">"warning"</span>, <span class="k">"message"</span>:<span class="vs">"Ependymal invasion — CSF dissemination workup required before treatment planning"</span> }
+  ],
+
+  <span class="k">"clinical_radiological_correlation"</span>: {
+    <span class="k">"lobe_symptom_match"</span>: <span class="vb">true</span>,
+    <span class="k">"matched_pairs"</span>: [{ <span class="k">"lobe"</span>:<span class="vs">"temporal"</span>, <span class="k">"symptom"</span>:<span class="vs">"wernickes_aphasia"</span> }],
+    <span class="k">"discrepancies"</span>: []
+  },
+
+  <span class="k">"recommendation_summary"</span>: <span class="vs">"Imaging and molecular profile are consistent with IDH-wildtype GBM. MGMT methylation is a favorable prognostic marker and the patient is eligible for Stupp chemoradiation. Ependymal invasion warrants urgent CSF evaluation prior to finalizing the treatment plan."</span>,
+  <span class="k">"disclaimer"</span>: <span class="vs">"AI-generated clinical decision support. Must be reviewed by a qualified neuro-oncologist before any clinical action is taken. Confidence score reflects data completeness, not diagnostic certainty."</span>
+}</pre>
+</div>
+
+<div class="panel" id="p3">
+<div class="sh">core tables</div>
+<pre><span class="sk">CREATE TABLE</span> <span class="st">patients</span> (
+  <span class="sc">id</span>          UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">mrn</span>         VARCHAR(50) <span class="sk">UNIQUE</span>,
+  <span class="sc">created_at</span>  TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="sk">CREATE TABLE</span> <span class="st">sessions</span> (
+  <span class="sc">id</span>          UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">patient_id</span>  UUID <span class="sk">REFERENCES</span> patients(id),
+  <span class="sc">status</span>      VARCHAR(20) <span class="sk">DEFAULT</span> <span class="vs">'active'</span>, <span class="cm">-- active|completed|pending_review</span>
+  <span class="sc">created_at</span>  TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- All textual diagnostic fields as JSONB (flexible, no schema migrations needed)</span>
+<span class="sk">CREATE TABLE</span> <span class="st">patient_context</span> (
+  <span class="sc">id</span>                  UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">patient_id</span>          UUID <span class="sk">REFERENCES</span> patients(id),
+  <span class="sc">session_id</span>          UUID <span class="sk">REFERENCES</span> sessions(id),
+  <span class="sc">symptoms</span>            JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- headache, seizure, deficits, duration</span>
+  <span class="sc">clinical</span>            JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- age, sex, KPS, ECOG, EOR, comorbidities</span>
+  <span class="sc">genomics</span>            JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- IDH, MGMT, 1p19q, TERT, EGFR, CDKN2A</span>
+  <span class="sc">vasari</span>              JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- enhancement, multifocal, midline etc.</span>
+  <span class="sc">pathology</span>           JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- histology, mitotic index, Ki67, necrosis</span>
+  <span class="sc">labs</span>                JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- CSF, LDH, steroid dose, ICP</span>
+  <span class="sc">treatment_history</span>   JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- prior surgery, RT dose, TMZ, bevacizumab</span>
+  <span class="sc">fields_populated</span>    JSONB <span class="sk">DEFAULT</span> <span class="vs">'{}'</span>,     <span class="cm">-- {field_name: true/false} map</span>
+  <span class="sc">completeness_score</span>  DECIMAL(4,3),            <span class="cm">-- 0.000 to 1.000; recomputed each update</span>
+  <span class="sc">updated_at</span>          TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Full conversation history — passed to Llama as rolling context window</span>
+<span class="sk">CREATE TABLE</span> <span class="st">messages</span> (
+  <span class="sc">id</span>            UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">session_id</span>    UUID <span class="sk">REFERENCES</span> sessions(id),
+  <span class="sc">role</span>          VARCHAR(10) <span class="sk">NOT NULL</span>,   <span class="cm">-- 'user' | 'assistant' | 'system'</span>
+  <span class="sc">content</span>       TEXT <span class="sk">NOT NULL</span>,
+  <span class="sc">content_json</span>  JSONB,                    <span class="cm">-- parsed Llama JSON response</span>
+  <span class="sc">created_at</span>    TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Tracks every question asked + user's answer (prevents re-asking)</span>
+<span class="sk">CREATE TABLE</span> <span class="st">questions_asked</span> (
+  <span class="sc">id</span>                UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">session_id</span>        UUID <span class="sk">REFERENCES</span> sessions(id),
+  <span class="sc">question_id</span>       VARCHAR(100),   <span class="cm">-- 'q_headache_pattern'</span>
+  <span class="sc">question_type</span>     VARCHAR(5),     <span class="cm">-- 'MCQ' | 'MSQ'</span>
+  <span class="sc">category</span>          VARCHAR(50),
+  <span class="sc">fields_targeted</span>   JSONB,          <span class="cm">-- ["field_name_1", ...]</span>
+  <span class="sc">answer_ids</span>        JSONB,          <span class="cm">-- ["a","c"] — selected option ids</span>
+  <span class="sc">answer_free_text</span>  TEXT,           <span class="cm">-- populated if "Other" selected</span>
+  <span class="sc">answered_at</span>       TIMESTAMPTZ
+);
+
+<span class="cm">-- U-Net model outputs (one row per scan)</span>
+<span class="sk">CREATE TABLE</span> <span class="st">imaging_reports</span> (
+  <span class="sc">id</span>                  UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">patient_id</span>          UUID <span class="sk">REFERENCES</span> patients(id),
+  <span class="sc">session_id</span>          UUID <span class="sk">REFERENCES</span> sessions(id),
+  <span class="sc">scan_date</span>           DATE,
+  <span class="sc">wt_volume_cm3</span>       DECIMAL(8,3),  <span class="sc">ncr_volume_cm3</span>  DECIMAL(8,3),
+  <span class="sc">ed_volume_cm3</span>       DECIMAL(8,3),  <span class="sc">et_volume_cm3</span>   DECIMAL(8,3),
+  <span class="sc">diameter_mm</span>         DECIMAL(6,2),
+  <span class="sc">centroid_x</span>          INTEGER,  <span class="sc">centroid_y</span>  INTEGER,  <span class="sc">centroid_z</span>  INTEGER,
+  <span class="sc">lobe_frontal</span>        BOOLEAN,  <span class="sc">lobe_temporal</span>  BOOLEAN,
+  <span class="sc">lobe_parietal</span>       BOOLEAN,  <span class="sc">lobe_occipital</span> BOOLEAN,  <span class="sc">lobe_other</span> BOOLEAN,
+  <span class="cm">-- Derived metrics computed at ingest time (avoid recomputing in LLM)</span>
+  <span class="sc">necrosis_ratio</span>      DECIMAL(5,4),
+  <span class="sc">enhancement_ratio</span>   DECIMAL(5,4),
+  <span class="sc">edema_ratio</span>         DECIMAL(5,4),
+  <span class="sc">midline_shift_mm</span>    DECIMAL(5,2),
+  <span class="sc">surface_to_volume</span>   DECIMAL(6,4),
+  <span class="sc">created_at</span>          TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Llama-generated diagnostic reports</span>
+<span class="sk">CREATE TABLE</span> <span class="st">diagnostic_reports</span> (
+  <span class="sc">id</span>                      UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">patient_id</span>              UUID <span class="sk">REFERENCES</span> patients(id),
+  <span class="sc">session_id</span>              UUID <span class="sk">REFERENCES</span> sessions(id),
+  <span class="sc">imaging_report_id</span>       UUID <span class="sk">REFERENCES</span> imaging_reports(id),
+  <span class="sc">who_grade_predicted</span>     VARCHAR(10),
+  <span class="sc">diagnosis_label</span>         TEXT,
+  <span class="sc">confidence_score</span>        DECIMAL(4,3),
+  <span class="sc">data_completeness</span>       DECIMAL(4,3),
+  <span class="sc">survival_category</span>       VARCHAR(20),
+  <span class="sc">survival_score</span>          INTEGER,
+  <span class="sc">estimated_median_months</span> VARCHAR(20),
+  <span class="sc">factors_favorable</span>       JSONB,  <span class="sc">factors_unfavorable</span>  JSONB,
+  <span class="sc">treatment_flags</span>         JSONB,
+  <span class="sc">full_report</span>             JSONB,   <span class="cm">-- complete Llama JSON stored verbatim</span>
+  <span class="sc">reviewed_by</span>             VARCHAR(100),
+  <span class="sc">reviewed_at</span>             TIMESTAMPTZ,
+  <span class="sc">created_at</span>              TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- RAG knowledge base chunks with vector embeddings (requires pgvector)</span>
+<span class="sk">CREATE EXTENSION IF NOT EXISTS</span> vector;
+<span class="sk">CREATE TABLE</span> <span class="st">knowledge_chunks</span> (
+  <span class="sc">id</span>          UUID <span class="sk">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  <span class="sc">source</span>      VARCHAR(200),   <span class="cm">-- 'WHO_2021', 'VASARI_Manual', 'RANO_Criteria'</span>
+  <span class="sc">chunk_text</span>  TEXT,
+  <span class="sc">embedding</span>   vector(1536),   <span class="cm">-- text-embedding-3-small or nomic-embed</span>
+  <span class="sc">metadata</span>    JSONB,
+  <span class="sc">created_at</span>  TIMESTAMPTZ <span class="sk">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Indexes</span>
+<span class="sk">CREATE INDEX</span> idx_msg_session    <span class="sk">ON</span> messages(session_id, created_at);
+<span class="sk">CREATE INDEX</span> idx_ctx_patient    <span class="sk">ON</span> patient_context(patient_id);
+<span class="sk">CREATE INDEX</span> idx_q_session      <span class="sk">ON</span> questions_asked(session_id);
+<span class="sk">CREATE INDEX</span> idx_img_patient    <span class="sk">ON</span> imaging_reports(patient_id, scan_date);
+<span class="sk">CREATE INDEX</span> idx_rep_patient    <span class="sk">ON</span> diagnostic_reports(patient_id, created_at);
+<span class="sk">CREATE INDEX</span> idx_vec_embed      <span class="sk">ON</span> knowledge_chunks <span class="sk">USING</span> ivfflat (embedding vector_cosine_ops);</pre>
+</div>
+
+</div>
+<script>
+var ps=document.querySelectorAll('.panel');
+var ts=document.querySelectorAll('.tb');
+function sw(i){
+  ps.forEach(function(p,j){p.style.display=j===i?'block':'none';});
+  ts.forEach(function(t,j){t.classList.toggle('on',j===i);});
+}
+ps.forEach(function(p,i){if(i>0)p.style.display='none';});
+</script>

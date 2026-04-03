@@ -1,0 +1,49 @@
+# --- Python / Environment ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.venv
+env/
+build/
+dist/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# --- Data & Weights (Crucial for BraTS/Neuro-imaging) ---
+# Don't track massive medical datasets or .nii.gz files
+Data/
+datasets/
+raw_data/
+*.nii
+*.nii.gz
+*.dcm
+*.h5
+*.pth
+*.pt
+*.onnx
+*.weights
+*.ckpt
+*.dcm
+# --- Logs & Visualization ---
+logs/
+mlruns/
+lightning_logs/
+results/
+plots/
+wandb/
+
+# --- Local Config & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+static/annotated/*
+# --- Hardware / GPU Cache ---
+.nv/
+.cuda/
+neuroassist/uploads/*
+neuroassist/static/*

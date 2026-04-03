@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Records{% endblock %}
+
+{% block head_extra %}
+<style>
+  .records-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .records-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .records-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .records-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .records-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 16px 0 18px;
+  }
+
+  .summary-card {
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(238,245,251,0.88));
+    border: 1px solid var(--blue-border);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--blue-dark);
+  }
+
+  .records-list {
+    display: grid;
+    gap: 16px;
+  }
+
+  .patient-card {
+    display: grid;
+    gap: 16px;
+  }
+
+  .patient-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .patient-ident {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .patient-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--blue-dark), #2a78c8);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    box-shadow: var(--shadow-soft);
+    flex-shrink: 0;
+  }
+
+  .patient-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+
+  .patient-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .patient-session-count {
+    font-size: 12px;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+
+  .session-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .session-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fbfdff, #f1f7fd);
+    border: 1px solid var(--blue-border);
+  }
+
+  .session-main {
+    display: grid;
+    gap: 8px;
+  }
+
+  .session-topline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .session-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .session-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .session-metrics {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .session-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--blue-border);
+    background: rgba(255,255,255,0.9);
+    color: var(--text-mid);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .session-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .inline-muted {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .empty-state {
+    padding: 26px;
+    text-align: center;
+  }
+
+  @media (max-width: 980px) {
+    .records-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .records-search {
+      grid-template-columns: 1fr;
+    }
+
+    .records-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .session-row {
+      grid-template-columns: 1fr;
+    }
+
+    .session-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="records-shell">
+  <div class="records-top">
+    <div>
+      <div class="page-heading">Patient Records</div>
+      <div class="page-sub">Search by patient name or MRN and jump straight into session chat, reports, or annotated imaging.</div>
+    </div>
+    <div class="records-actions">
+      <a class="btn btn-secondary" href="{{ url_for('session.index') }}">New Session</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <form class="records-search" method="get" action="{{ url_for('session.records_view') }}">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" for="records-q">Search</label>
+        <input
+          class="form-input"
+          id="records-q"
+          name="q"
+          type="search"
+          value="{{ query }}"
+          placeholder="Search patient by first name, last name, or MRN">
+      </div>
+      <div class="records-actions">
+        <button class="btn btn-primary" type="submit">Search Records</button>
+        {% if query %}
+        <a class="btn btn-secondary" href="{{ url_for('session.records_view') }}">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="records-summary">
+    <div class="summary-card">
+      <div class="summary-label">Patients Shown</div>
+      <div class="summary-value">{{ patient_count }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Sessions Shown</div>
+      <div class="summary-value">{{ session_count }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Search Scope</div>
+      <div class="summary-value" style="font-size:18px;">{{ query if query else 'Recent records' }}</div>
+    </div>
+  </div>
+
+  {% if patients %}
+  <div class="records-list">
+    {% for patient in patients %}
+    <div class="card patient-card">
+      <div class="patient-head">
+        <div class="patient-ident">
+          <div class="patient-badge">
+            {{ ((patient.first_name or '')[:1] ~ (patient.last_name or '')[:1])|upper if patient.first_name or patient.last_name else 'PT' }}
+          </div>
+          <div>
+            <div class="patient-name">{{ patient.full_name }}</div>
+            <div class="patient-meta">
+              {% if patient.mrn %}MRN {{ patient.mrn }}{% else %}MRN not recorded{% endif %}
+              {% if patient.age %} - {{ patient.age }} y/o{% endif %}
+              {% if patient.sex %} - {{ patient.sex }}{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="patient-session-count">{{ patient.sessions|length }} session{{ '' if patient.sessions|length == 1 else 's' }}</div>
+      </div>
+
+      <div class="session-list">
+        {% for sess in patient.sessions %}
+        <div class="session-row">
+          <div class="session-main">
+            <div class="session-topline">
+              <div class="session-title">Session {{ loop.index }}</div>
+              <span class="badge {% if sess.status == 'active' %}badge-info{% else %}badge-ok{% endif %}">{{ sess.status|capitalize }}</span>
+            </div>
+            <div class="session-sub">
+              ID {{ sess.session_id }} - Opened {{ sess.session_created_at }}
+              {% if sess.scan_date %} - Scan {{ sess.scan_date }}{% endif %}
+            </div>
+            <div class="session-metrics">
+              <span class="session-pill">Completeness {{ sess.completeness_percent }}%</span>
+              <span class="session-pill">WT {{ sess.wt_volume_cm3 }} cm3</span>
+              <span class="session-pill">ET {{ sess.et_volume_cm3 }} cm3</span>
+              {% if sess.has_report %}
+              <span class="session-pill">Grade {{ sess.who_grade_predicted or 'N/A' }}</span>
+              {% endif %}
+            </div>
+            <div class="session-sub">
+              {% if sess.diagnosis_label %}
+              {{ sess.diagnosis_label }}
+              {% else %}
+              <span class="inline-muted">Diagnostic report not generated yet.</span>
+              {% endif %}
+              {% if sess.has_report %}
+              - Confidence {{ '%.2f'|format(sess.confidence_score) }}
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="session-actions">
+            <a class="btn btn-secondary" href="{{ url_for('session.session_view', session_id=sess.session_id) }}">Open Session</a>
+            {% if sess.has_report %}
+            <a class="btn btn-secondary" href="{{ url_for('report.report_view', session_id=sess.session_id) }}" target="_blank">Open Report</a>
+            {% else %}
+            <span class="btn btn-secondary" style="pointer-events:none; opacity:0.55;">No Report Yet</span>
+            {% endif %}
+            {% if sess.has_annotated %}
+            <a class="btn btn-secondary" href="{{ url_for('report.annotated_slices_view', session_id=sess.session_id) }}" target="_blank">Annotated Images</a>
+            {% else %}
+            <span class="btn btn-secondary" style="pointer-events:none; opacity:0.55;">No Annotated Images</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    <div class="page-heading" style="font-size:22px;">No matching records</div>
+    <div class="page-sub" style="margin-bottom:0;">
+      {% if query %}
+      Try a broader name fragment or search by MRN.
+      {% else %}
+      Patient records will appear here once sessions have been created.
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

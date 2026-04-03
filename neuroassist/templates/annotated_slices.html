@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Annotated Slices{% if session %} - {{ session.first_name }} {{ session.last_name }}{% endif %}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .annotated-shell {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .annotated-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .annotated-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .annotated-summary {
+    margin-bottom: 14px;
+  }
+
+  .annotated-summary img,
+  .slice-viewer-image {
+    width: 100%;
+    display: block;
+    border-radius: 8px;
+    border: 1px solid var(--blue-border);
+    background: #0f1722;
+    object-fit: contain;
+  }
+
+  .annotated-summary img {
+    max-height: min(28vh, 220px);
+  }
+
+  .slice-viewer {
+    display: grid;
+    gap: 12px;
+  }
+
+  .slice-viewer-image-wrap {
+    background: linear-gradient(180deg, #f7fbff 0%, #eef5fd 100%);
+    border: 1px solid var(--blue-border);
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .slice-viewer-image {
+    max-height: min(42vh, 360px);
+  }
+
+  .slice-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+
+  .slice-status {
+    font-weight: 600;
+    color: var(--blue-dark);
+  }
+
+  .slice-slider-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slice-end {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 48px;
+  }
+
+  .slice-slider {
+    width: 100%;
+    accent-color: var(--blue-mid);
+    cursor: ew-resize;
+  }
+
+  .slice-helper {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .muted-note {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .annotated-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .annotated-summary img {
+      max-height: min(24vh, 180px);
+    }
+
+    .slice-viewer-image {
+      max-height: min(34vh, 280px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .annotated-shell {
+      max-width: 100%;
+    }
+
+    .slice-viewer-image-wrap {
+      padding: 8px;
+    }
+
+    .slice-meta {
+      gap: 8px;
+    }
+
+    .slice-slider-row {
+      grid-template-columns: 36px minmax(0, 1fr) 36px;
+      gap: 8px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="annotated-shell">
+  <div class="annotated-top">
+    <div>
+      <div class="page-heading">Annotated MRI Slices</div>
+      <div class="page-sub">
+        {{ session.first_name }} {{ session.last_name }} - Session {{ session.session_id }}
+      </div>
+    </div>
+
+    <div class="annotated-actions">
+      <a class="btn btn-secondary" href="{{ url_for('report.report_view', session_id=session.session_id) }}">Back To Report</a>
+    </div>
+  </div>
+
+  {% if summary_image %}
+  <div class="card annotated-summary">
+    <div class="card-title">Three-Plane Summary</div>
+    <img src="{{ summary_image }}" alt="Three-plane annotated summary">
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-title">Axial Tumor Slices</div>
+    {% if axial_slices %}
+    <div class="slice-viewer" data-slice-viewer data-images='{{ axial_slices|tojson }}'>
+      <div class="slice-viewer-image-wrap">
+        <img
+          class="slice-viewer-image"
+          data-slice-image
+          src="{{ axial_slices[0] }}"
+          alt="Annotated axial slice 1">
+      </div>
+
+      <div class="slice-meta">
+        <div class="slice-status" data-slice-status>Slice 1 of {{ axial_slices|length }}</div>
+        <div class="slice-helper">Drag the slider left or right to browse the annotated slices.</div>
+      </div>
+
+      <div class="slice-slider-row">
+        <div class="slice-end">1</div>
+        <input
+          class="slice-slider"
+          data-slice-slider
+          type="range"
+          min="1"
+          max="{{ axial_slices|length }}"
+          step="1"
+          value="1"
+          aria-label="Annotated axial slice selector">
+        <div class="slice-end">{{ axial_slices|length }}</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="muted-note">No axial slice images were found for this session.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if axial_slices %}
+<script>
+  (() => {
+    const viewer = document.querySelector("[data-slice-viewer]");
+    if (!viewer) return;
+
+    const images = JSON.parse(viewer.dataset.images || "[]");
+    if (!images.length) return;
+
+    const slider = viewer.querySelector("[data-slice-slider]");
+    const image = viewer.querySelector("[data-slice-image]");
+    const status = viewer.querySelector("[data-slice-status]");
+
+    const renderSlice = (index) => {
+      const boundedIndex = Math.min(Math.max(index, 0), images.length - 1);
+      const sliceNumber = boundedIndex + 1;
+
+      image.src = images[boundedIndex];
+      image.alt = `Annotated axial slice ${sliceNumber}`;
+      status.textContent = `Slice ${sliceNumber} of ${images.length}`;
+      slider.value = String(sliceNumber);
+    };
+
+    slider.addEventListener("input", (event) => {
+      renderSlice(Number(event.target.value) - 1);
+    });
+
+    renderSlice(0);
+  })();
+</script>
+{% endif %}
+{% endblock %}

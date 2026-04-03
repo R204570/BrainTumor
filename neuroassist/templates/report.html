@@ -1,0 +1,365 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Diagnostic Report{% if session %} - {{ session.first_name }} {{ session.last_name }}{% endif %}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .report-shell {
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+
+  .report-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .report-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .report-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .report-lead {
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  .grade-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 5px 12px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .grade-1 { background: #1A6A3A; }
+  .grade-2 { background: #A77914; }
+  .grade-3 { background: #C36E11; }
+  .grade-4 { background: #A02020; }
+  .grade-na { background: #5F7892; }
+
+  .report-line {
+    font-size: 13px;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+  }
+
+  .confidence-track {
+    height: 9px;
+    border-radius: 99px;
+    overflow: hidden;
+    background: #E6EEF8;
+    margin: 6px 0 10px;
+  }
+
+  .confidence-fill {
+    height: 9px;
+    background: var(--blue-mid);
+  }
+
+  .pill-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pill {
+    border: 1px solid var(--blue-border);
+    background: #f5faff;
+    color: var(--text-mid);
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .flag {
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 7px;
+    border: 1px solid transparent;
+  }
+
+  .flag.info {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    border-color: var(--blue-border);
+  }
+
+  .flag.warning {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-color: #F2D49A;
+  }
+
+  .flag.critical {
+    background: #FDEDEE;
+    color: var(--danger-text);
+    border-color: #E7B8B8;
+  }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mini-metric {
+    border: 1px solid var(--blue-border);
+    border-radius: 16px;
+    padding: 12px;
+    background: linear-gradient(180deg, #fbfdff, #f2f8fe);
+  }
+
+  .mini-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .mini-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .muted-note {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .disclaimer {
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--blue-border);
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .print-only {
+    display: none;
+  }
+
+  @media (max-width: 980px) {
+    .report-grid {
+      grid-template-columns: 1fr;
+    }
+    .report-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .mini-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media print {
+    .nav-bar, .sidebar, .report-actions, #toast {
+      display: none !important;
+    }
+    .main-content {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .layout {
+      padding-top: 0 !important;
+    }
+    .report-shell {
+      max-width: none;
+    }
+    .print-only {
+      display: block;
+      margin-bottom: 10px;
+      color: #183E6B;
+      font-size: 12px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-shell">
+  <div class="report-top">
+    <div>
+      <div class="page-heading">Diagnostic Report</div>
+      <div class="page-sub">
+        {{ session.first_name }} {{ session.last_name }}
+        {% if patient_age %} · {{ patient_age }} y/o{% endif %}
+        {% if session.sex %} · {{ session.sex }}{% endif %}
+        {% if session.mrn %} · MRN {{ session.mrn }}{% endif %}
+        · Session {{ session.session_id }}
+      </div>
+    </div>
+
+    <div class="report-actions">
+      <a class="btn btn-secondary" href="/session/{{ session.session_id }}">Back To Session</a>
+      <a class="btn btn-secondary" href="/report/{{ session.session_id }}/print" target="_blank">Open Print View</a>
+      <button class="btn btn-primary" type="button" onclick="window.print()">Download report PDF</button>
+    </div>
+  </div>
+
+  <div class="print-only">
+    NeuroAssist Clinical Decision Support Report · Session {{ session.session_id }}
+  </div>
+
+  {% if report %}
+  {% set grade_label = report.who_grade_predicted|string if report.who_grade_predicted is not none else '' %}
+  {% set confidence = report.confidence_score|float if report.confidence_score is not none else 0 %}
+  {% set confidence_percent = (confidence * 100)|round(0, 'floor')|int %}
+  {% set grade_class = 'grade-na' %}
+  {% if '4' in grade_label %}{% set grade_class = 'grade-4' %}{% endif %}
+  {% if '3' in grade_label %}{% set grade_class = 'grade-3' %}{% endif %}
+  {% if '2' in grade_label %}{% set grade_class = 'grade-2' %}{% endif %}
+  {% if '1' in grade_label %}{% set grade_class = 'grade-1' %}{% endif %}
+
+  <div class="report-grid">
+    <section>
+      <div class="card report-lead">
+        <div class="grade-pill {{ grade_class }}">WHO Grade {{ grade_label if grade_label else 'N/A' }}</div>
+        <div class="report-line"><strong>{{ report.diagnosis_label or 'Diagnosis pending' }}</strong></div>
+        <div class="report-line">Confidence score: <strong>{{ '%.2f'|format(confidence) }}</strong></div>
+        <div class="confidence-track"><div class="confidence-fill" style="width: {{ confidence_percent }}%"></div></div>
+
+        <div class="report-line">
+          Survival category:
+          <strong>{{ report.survival_category or 'N/A' }}</strong>
+          {% if report.estimated_median_months %}
+          · Estimated median OS: <strong>{{ report.estimated_median_months }}</strong>
+          {% endif %}
+        </div>
+
+        {% if report.report_text %}
+        <div class="report-line">{{ report.report_text }}</div>
+        {% endif %}
+
+        {% if report.recommendation_summary %}
+        <div class="report-line">{{ report.recommendation_summary }}</div>
+        {% endif %}
+
+        <div class="section-label">Favorable factors</div>
+        <div class="pill-wrap" style="margin-bottom:10px;">
+          {% for item in report.factors_favorable or [] %}
+          <span class="pill">+ {{ item }}</span>
+          {% else %}
+          <span class="muted-note">No favorable factors listed.</span>
+          {% endfor %}
+        </div>
+
+        <div class="section-label">Unfavorable factors</div>
+        <div class="pill-wrap">
+          {% for item in report.factors_unfavorable or [] %}
+          <span class="pill">- {{ item }}</span>
+          {% else %}
+          <span class="muted-note">No unfavorable factors listed.</span>
+          {% endfor %}
+        </div>
+
+        <div class="disclaimer">
+          {{ report.disclaimer or disclaimer }}
+        </div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="section-label">Treatment flags</div>
+        {% for flag in report.treatment_flags or [] %}
+          {% set severity = (flag.severity or 'info') %}
+          <div class="flag {{ severity }}">
+            <strong>{{ severity|upper }}</strong>
+            {% if flag.message %} · {{ flag.message }}{% elif flag.text %} · {{ flag.text }}{% endif %}
+          </div>
+        {% else %}
+          <div class="muted-note">No treatment flags recorded.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <div class="section-label">Imaging summary</div>
+        {% if imaging %}
+        <div class="mini-grid">
+          <div class="mini-metric">
+            <div class="mini-label">Whole tumor</div>
+            <div class="mini-value">{{ imaging.wt_volume_cm3 or 0 }}</div>
+            <div class="muted-note">cm3</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-label">Diameter</div>
+            <div class="mini-value">{{ imaging.diameter_mm or 0 }}</div>
+            <div class="muted-note">mm</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-label">Necrosis ratio</div>
+            <div class="mini-value">{{ imaging.necrosis_ratio or 0 }}</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-label">Edema ratio</div>
+            <div class="mini-value">{{ imaging.edema_ratio or 0 }}</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-label">Enhancement ratio</div>
+            <div class="mini-value">{{ imaging.enhancement_ratio or 0 }}</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-label">Midline shift</div>
+            <div class="mini-value">{{ imaging.midline_shift_mm or 0 }}</div>
+            <div class="muted-note">mm</div>
+          </div>
+        </div>
+        {% if imaging.annotated_dir %}
+        <div class="mt-16">
+          <a class="btn btn-secondary" href="{{ url_for('report.annotated_slices_view', session_id=session.session_id) }}" target="_blank">Open annotated slices</a>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="muted-note">No imaging report found for this session.</div>
+        {% endif %}
+      </div>
+
+      <div class="card mt-16">
+        <div class="section-label">Report metadata</div>
+        <div class="report-line">Session ID: <code>{{ session.session_id }}</code></div>
+        <div class="report-line">Status: {{ session.status or 'active' }}</div>
+        {% if report.created_at %}
+        <div class="report-line">Generated at: {{ report.created_at }}</div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  {% else %}
+  <div class="card">
+    <div class="report-line">No diagnostic report generated yet.</div>
+    <div class="muted-note">Complete the clinical interview in the session page to unlock report generation.</div>
+    <div class="mt-16">
+      <a class="btn btn-primary" href="/session/{{ session.session_id }}">Return to session</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if print_mode %}
+<script>
+  window.addEventListener('load', () => {
+    window.print();
+  });
+</script>
+{% endif %}
+{% endblock %}

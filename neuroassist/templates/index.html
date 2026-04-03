@@ -1,0 +1,611 @@
+﻿{% extends "base.html" %}
+
+{% block title %}New Session{% endblock %}
+{% block meta_description %}Start a new NeuroAssist diagnostic session by entering patient details and uploading an MRI scan.{% endblock %}
+
+{% block head_extra %}
+<style>
+  .hero {
+    background:
+      radial-gradient(circle at top right, rgba(127,199,255,0.36), transparent 30%),
+      linear-gradient(135deg, #163b65 0%, #245f9f 58%, #347fcb 100%);
+    border-radius: 26px;
+    padding: 30px 32px;
+    color: #fff;
+    margin-bottom: 26px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 30px;
+    box-shadow: 0 20px 44px rgba(20, 59, 102, 0.22);
+  }
+  .hero-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .hero-copy {
+    flex: 1;
+  }
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 3vw, 36px);
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.03em;
+  }
+  .hero p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.82);
+    max-width: 640px;
+  }
+  .hero-highlights {
+    min-width: 240px;
+    display: grid;
+    gap: 10px;
+  }
+  .hero-stat {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .hero-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.74);
+    margin-bottom: 4px;
+  }
+  .hero-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    .hero {
+      flex-direction: column;
+      padding: 24px;
+    }
+    .hero-highlights {
+      min-width: 0;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .upload-zone {
+    border: 2px dashed var(--blue-border);
+    border-radius: 20px;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.92), rgba(238,245,251,0.88));
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .upload-zone.drag-over {
+    border-color: var(--blue-mid);
+    background: linear-gradient(180deg, #f8fbff, #e9f4ff);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+  }
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 12px;
+    border-radius: 18px;
+    background: var(--blue-light);
+    border: 1px solid var(--blue-border);
+    color: var(--blue-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .upload-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+  }
+  .upload-sub { font-size: 12px; color: var(--text-muted); }
+  .upload-name {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--blue-mid);
+    font-weight: 700;
+  }
+
+  .toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255,255,255,0.8);
+    color: var(--text-mid);
+    border: 1px solid var(--blue-border);
+    border-radius: 14px;
+    transition: background 0.14s, color 0.14s, border-color 0.14s, box-shadow 0.14s;
+    font-family: var(--font);
+    box-shadow: none;
+  }
+  .toggle-btn.active {
+    background: linear-gradient(135deg, var(--blue-dark), #245f9f);
+    color: #FFF;
+    border-color: transparent;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .info-panel {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.92), rgba(238,245,251,0.88));
+    border: 1px solid var(--blue-border);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .info-panel h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+  .info-num {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, var(--blue-dark), #2a78c8);
+    color: #FFF;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 26px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(200,216,232,0.72);
+    box-shadow: var(--shadow-soft);
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .step.active { color: var(--blue-dark); }
+  .step-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--blue-border);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .step.active .step-dot {
+    background: var(--blue-dark);
+    border-color: var(--blue-dark);
+    color: #FFF;
+  }
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--blue-border);
+    margin: 0 8px;
+    min-width: 24px;
+  }
+
+  .disclaimer-card {
+    background: linear-gradient(180deg, #fff8ec, #fff3df);
+    border-color: #f0d8ac;
+  }
+
+  #loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,61,122,0.55);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #FFF;
+    gap: 16px;
+  }
+  #loading-overlay.show { display: flex; }
+  .loading-spinner {
+    width: 44px; height: 44px;
+    border: 4px solid rgba(255,255,255,0.25);
+    border-top-color: #FFF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-text {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+  .loading-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero banner -->
+<div class="hero">
+  <div class="hero-icon">NA</div>
+  <div class="hero-copy">
+    <div class="hero-kicker">Clinical Decision Support</div>
+    <h1>Start a New Diagnostic Session</h1>
+    <p>Enter patient details and upload an MRI scan. NeuroAssist will run 3D U-Net tumor segmentation and guide you through a structured clinical interview to generate a WHO 2021-compliant diagnostic report.</p>
+  </div>
+  <div class="hero-highlights">
+    <div class="hero-stat">
+      <div class="hero-stat-label">Imaging pipeline</div>
+      <div class="hero-stat-value">4-modality MRI ingestion</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Output</div>
+      <div class="hero-stat-value">Segmentation, interview, report</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step indicator -->
+<div class="steps">
+  <div class="step active">
+    <div class="step-dot">1</div>
+    <span>Patient Details</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">2</div>
+    <span>Upload MRI Scan</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">3</div>
+    <span>Clinical Interview</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">4</div>
+    <span>Diagnostic Report</span>
+  </div>
+</div>
+
+<div class="two-col">
+  <!-- Left: form -->
+  <div>
+    <!-- Patient details card -->
+    <div class="card">
+      <div class="card-title">Patient Details</div>
+
+      <form id="session-form" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="first_name">First Name *</label>
+            <input class="form-input" type="text" id="first_name" name="first_name"
+                   placeholder="Jane" autocomplete="given-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="last_name">Last Name *</label>
+            <input class="form-input" type="text" id="last_name" name="last_name"
+                   placeholder="Doe" autocomplete="family-name" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mrn">MRN (Medical Record No.)</label>
+            <input class="form-input" type="text" id="mrn" name="mrn"
+                   placeholder="MRN-001234">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="date_of_birth">Date of Birth</label>
+            <input class="form-input" type="date" id="date_of_birth" name="date_of_birth">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sex">Biological Sex</label>
+          <select class="form-select" id="sex" name="sex">
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other / Not disclosed</option>
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <!-- MRI scan upload card -->
+    <div class="card mt-16">
+      <div class="card-title">Upload MRI Scan</div>
+
+      <!-- Scan type selector -->
+      <div class="form-label" style="margin-bottom:6px">Scan format</div>
+      <div class="toggle-group" role="group">
+        <button class="toggle-btn active" id="btn-nii" onclick="setScanType('nii')">NIfTI (.nii / .nii.gz)</button>
+        <button class="toggle-btn" id="btn-dicom" onclick="setScanType('dicom')">DICOM folder</button>
+      </div>
+
+      <div id="nii-hint" class="text-xs text-muted mt-4" style="margin-bottom:10px">
+        Select the folder that contains your .nii/.nii.gz files.
+      </div>
+      <div id="dicom-hint" class="text-xs text-muted mt-4" style="margin-bottom:10px; display:none">
+        Select the DICOM root folder that has subfolders t1/t1w, t2/t2w, t1wce/t1ce, and flair with .dcm slices.
+      </div>
+
+      <!-- Drag-drop zone -->
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="scan-file" multiple webkitdirectory directory
+               onchange="onFileSelected(this)">
+        <div class="upload-icon">UP</div>
+        <div class="upload-title">Click to select folder (or drag files)</div>
+        <div class="upload-sub">Folder upload supported for both NIfTI and DICOM. Max 500 MB.</div>
+        <div class="upload-name" id="file-name-display"></div>
+      </div>
+
+      <div id="form-error" class="form-error mt-8" style="display:none"></div>
+
+      <div class="mt-16">
+        <button class="btn btn-primary" id="start-btn" onclick="startSession()" style="width:100%">
+          <span>Start Session &amp; Run Inference</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: how it works -->
+  <div>
+    <div class="info-panel">
+      <h3>How NeuroAssist works</h3>
+      <div class="info-item">
+        <div class="info-num">1</div>
+        <div><strong>3D U-Net segmentation</strong> - the model segments the MRI into NCR, ED, and ET regions and calculates volumes, diameter, and lobe involvement.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-num">2</div>
+        <div><strong>Clinical interview</strong> - a local Ollama model runs a plain-text clinician interview to collect the symptoms, genomics, pathology, and treatment context that imaging alone cannot provide.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-num">3</div>
+        <div><strong>WHO 2021 grading</strong> - once sufficient data is collected (60%+ completeness), the model generates a WHO-classified diagnostic report.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-num">4</div>
+        <div><strong>Survival outlook</strong> - a validated 0-100 scoring algorithm estimates median OS and flags treatment eligibility.</div>
+      </div>
+    </div>
+
+    <div class="card disclaimer-card mt-16">
+      <div class="card-title">Important Disclaimer</div>
+      <p class="text-sm text-muted">
+        NeuroAssist is a <strong>clinical decision support tool</strong>.
+        All outputs must be reviewed by a qualified neuro-oncologist before any clinical action is taken.
+        This tool does not replace clinical judgment.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Full-screen loading overlay (shown during inference) -->
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Creating session...</div>
+  <div class="loading-sub" id="loading-sub">Please wait</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // â”€â”€ Scan type toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  let scanType = 'nii';
+
+  function setScanType(type) {
+    scanType = type;
+    document.getElementById('btn-nii').classList.toggle('active', type === 'nii');
+    document.getElementById('btn-dicom').classList.toggle('active', type === 'dicom');
+    document.getElementById('nii-hint').style.display   = type === 'nii'   ? 'block' : 'none';
+    document.getElementById('dicom-hint').style.display = type === 'dicom' ? 'block' : 'none';
+    const input = document.getElementById('scan-file');
+    input.value = '';
+    onFileSelected(input);
+  }
+
+  // â”€â”€ File drag-drop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      document.getElementById('scan-file').files = dt.files;
+      onFileSelected(document.getElementById('scan-file'));
+    }
+  });
+
+  function onFileSelected(input) {
+    const display = document.getElementById('file-name-display');
+    if (!input.files.length) {
+      display.textContent = '';
+      return;
+    }
+
+    const files = Array.from(input.files);
+    const first = files[0];
+    const rel = first.webkitRelativePath || first.name;
+    const rootName = rel.includes('/') ? rel.split('/')[0] : first.name;
+    const suffix = scanType === 'dicom' ? 'DICOM files' : 'NIfTI files';
+
+    if (files.length === 1) {
+      display.textContent = 'Selected: ' + rootName;
+      return;
+    }
+
+    display.textContent = `Selected folder: ${rootName} (${files.length} ${suffix})`;
+  }
+
+  // â”€â”€ Main form submission â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  async function startSession() {
+    const errEl = document.getElementById('form-error');
+    errEl.style.display = 'none';
+
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName  = document.getElementById('last_name').value.trim();
+    const fileInput = document.getElementById('scan-file');
+
+    if (!firstName) { showError('First name is required.'); return; }
+    if (!fileInput.files.length) { showError('Please select an MRI folder.'); return; }
+
+    showLoading('Creating patient record...', '');
+    const btn = document.getElementById('start-btn');
+    btn.disabled = true;
+
+    try {
+      // â”€â”€ Step 1: Create session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      const sessionRes = await fetch('/session/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name:    firstName,
+          last_name:     lastName,
+          mrn:           document.getElementById('mrn').value.trim(),
+          date_of_birth: document.getElementById('date_of_birth').value || null,
+          sex:           document.getElementById('sex').value || null,
+        }),
+      });
+      if (!sessionRes.ok) {
+        const err = await sessionRes.json();
+        throw new Error(err.error || 'Session creation failed');
+      }
+      const { session_id } = await sessionRes.json();
+
+      // â”€â”€ Step 2: Upload and run inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      setLoading('Running 3D U-Net inference...', 'This may take 1-3 minutes depending on scan size');
+      const fd = new FormData();
+      fd.append('session_id', session_id);
+      fd.append('scan_type',  scanType);
+      for (const file of Array.from(fileInput.files)) {
+        const relativeName = file.webkitRelativePath || file.name;
+        fd.append('files', file, relativeName);
+      }
+
+      const uploadRes = await fetch('/upload/scan', {
+        method: 'POST',
+        body: fd,
+      });
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json();
+        throw new Error(err.error || 'Inference failed');
+      }
+
+      // â”€â”€ Step 3: Redirect to session view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      setLoading('Inference complete!', 'Redirecting to session...');
+      window.location.href = '/session/' + session_id;
+
+    } catch (e) {
+      hideLoading();
+      btn.disabled = false;
+      showError(e.message);
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('form-error');
+    el.textContent = 'Warning: ' + msg;
+    el.style.display = 'block';
+  }
+  function showLoading(text, sub) {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-sub').textContent  = sub;
+    document.getElementById('loading-overlay').classList.add('show');
+  }
+  function setLoading(text, sub) {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-sub').textContent  = sub;
+  }
+  function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+</script>
+{% endblock %}
