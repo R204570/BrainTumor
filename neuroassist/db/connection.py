@@ -128,6 +128,24 @@ def run_schema(schema_path: str | None = None) -> None:
         release_conn(conn)
 
 
+def ensure_schema_compatibility() -> None:
+    """Apply lightweight ALTERs for older local databases."""
+    statements = [
+        "ALTER TABLE diagnostic_reports ALTER COLUMN who_grade_predicted TYPE VARCHAR(20)",
+        "ALTER TABLE diagnostic_reports ALTER COLUMN survival_category TYPE VARCHAR(50)",
+        "ALTER TABLE diagnostic_reports ALTER COLUMN estimated_median_months TYPE VARCHAR(50)",
+    ]
+
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                for statement in statements:
+                    cur.execute(statement)
+    finally:
+        release_conn(conn)
+
+
 def ensure_database_exists(database_url: str | None = None) -> bool:
     """
     Ensure the target database exists.
@@ -168,3 +186,4 @@ def bootstrap_database(schema_path: str | None = None) -> None:
     ensure_database_exists()
     init_pool(force=True)
     run_schema(schema_path=schema_path)
+    ensure_schema_compatibility()

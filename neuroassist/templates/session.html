@@ -1,21 +1,86 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Session - {{ session.first_name }} {{ session.last_name }}{% endblock %}
+{% block title %}Clinical Intake{% endblock %}
+{% block meta_description %}Complete the clinical intake form for MRI-assisted NeuroAssist brain tumor reasoning and report generation.{% endblock %}
 
 {% block head_extra %}
 <style>
-  .session-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 18px;
+  .session-shell {
+    max-width: 1240px;
+    margin: 0 auto;
   }
 
-  .session-actions {
+  .intake-hero {
+    background:
+      radial-gradient(circle at top right, rgba(127, 199, 255, 0.26), transparent 34%),
+      linear-gradient(135deg, #163b65 0%, #245f9f 58%, #347fcb 100%);
+    border-radius: 26px;
+    padding: 28px 30px;
+    color: #fff;
     display: flex;
+    justify-content: space-between;
+    gap: 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 20px 44px rgba(20, 59, 102, 0.22);
+  }
+
+  .hero-copy {
+    flex: 1;
+  }
+
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .intake-hero h1 {
+    font-size: clamp(28px, 3vw, 36px);
+    margin-bottom: 8px;
+    letter-spacing: -0.03em;
+  }
+
+  .intake-hero p {
+    max-width: 720px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .hero-actions {
+    min-width: 260px;
+    display: grid;
+    gap: 10px;
+    align-self: start;
+  }
+
+  .hero-stat {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .hero-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.74);
+    margin-bottom: 4px;
+  }
+
+  .hero-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
   }
 
   .session-grid {
@@ -25,817 +90,1255 @@
     align-items: start;
   }
 
-  .patient-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
+  .intro-note {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f8fbff, #edf5fd);
+    border: 1px solid var(--blue-border);
+    color: var(--text-mid);
+    font-size: 13px;
     margin-bottom: 16px;
   }
 
-  .patient-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .patient-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--blue-dark), #2a78c8);
-    color: var(--blue-dark);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    color: #fff;
-    letter-spacing: 0.08em;
-    box-shadow: var(--shadow-soft);
-  }
-
-  .patient-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-dark);
-  }
-
-  .patient-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .patient-progress {
-    min-width: 220px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    background: rgba(238,245,251,0.86);
-    border: 1px solid rgba(200,216,232,0.8);
-  }
-
-  .metrics-row {
+  .metric-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
 
   .metric-card {
-    background: var(--white);
     border: 1px solid var(--blue-border);
     border-radius: 18px;
-    box-shadow: var(--shadow-card);
-    padding: 14px 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .metric-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--blue-mid), #7fc7ff);
+    padding: 15px 16px;
+    background: linear-gradient(180deg, #fbfdff, #f2f8fe);
+    min-height: 112px;
   }
 
   .metric-label {
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--text-muted);
-    font-weight: 600;
+    margin-bottom: 6px;
   }
 
   .metric-value {
-    margin-top: 6px;
     font-size: 24px;
     font-weight: 700;
     color: var(--text-dark);
-  }
-
-  .metric-unit {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
+    margin-bottom: 6px;
   }
 
   .metric-sub {
-    margin-top: 2px;
-    font-size: 11px;
+    font-size: 12px;
+    color: var(--text-mid);
   }
 
-  .metric-sub.ok { color: var(--ok-text); }
-  .metric-sub.warn { color: var(--warn-text); }
-  .metric-sub.danger { color: var(--danger-text); }
-
-  .chat-card {
-    padding: 0;
-    overflow: hidden;
-    border-radius: 22px;
+  .metric-card.ok {
+    background: linear-gradient(180deg, #fbfdff, #f1f7fd);
   }
 
-  .chat-head {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--blue-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(238,245,251,0.9));
+  .metric-card.warn {
+    background: linear-gradient(180deg, #fff9ef, #fff3df);
+    border-color: #f0d8ac;
   }
 
-  .chat-head h3 {
-    font-size: 14px;
+  .metric-card.danger {
+    background: linear-gradient(180deg, #fff2f2, #fdeaea);
+    border-color: #e8c2c2;
+  }
+
+  .intake-form {
+    display: grid;
+    gap: 16px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--blue-dark);
+    margin-bottom: 14px;
   }
 
-  .chat-messages {
-    height: 520px;
-    overflow-y: auto;
-    padding: 18px;
-    background:
-      linear-gradient(180deg, #fbfdff, #f2f8fe);
-    display: flex;
-    flex-direction: column;
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
-  .msg {
-    max-width: 88%;
-    border: 1px solid var(--blue-border);
-    border-radius: 16px;
-    padding: 12px 14px;
-    font-size: 12px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    word-break: break-word;
+  .form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
   }
 
-  .msg.assistant {
-    align-self: flex-start;
-    background: linear-gradient(180deg, #f8fbff, #edf5fd);
-    color: var(--text-dark);
+  textarea.form-input {
+    min-height: 96px;
+    resize: vertical;
+    line-height: 1.55;
   }
 
-  .msg.user {
-    align-self: flex-end;
-    background: #fff;
-    color: var(--text-dark);
-    box-shadow: var(--shadow-soft);
-  }
-
-  .msg-meta {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
-
-  .question-head {
-    font-size: 11px;
-    color: var(--blue-dark);
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .question-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin-bottom: 7px;
-  }
-
-  .question-instruction {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-
-  .options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .option-item {
-    border: 1px solid var(--blue-border);
-    background: #F5F9FE;
-    border-radius: 6px;
-    padding: 7px 9px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .option-item.selected {
-    background: var(--blue-light);
-    border-color: var(--blue-mid);
-    font-weight: 600;
-    color: var(--blue-dark);
-  }
-
-  .option-indicator {
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid #9EB9D2;
-    border-radius: 50%;
-    margin-top: 1px;
-    flex-shrink: 0;
-  }
-
-  .question-card[data-question-type="MSQ"] .option-indicator {
-    border-radius: 3px;
-  }
-
-  .option-item.selected .option-indicator {
-    border-color: var(--blue-mid);
-    background: var(--blue-mid);
-  }
-
-  .question-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .free-text-input {
-    margin-top: 8px;
-    width: 100%;
-    border: 1px solid var(--blue-border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 12px;
-    display: none;
-  }
-
-  .report-card {
-    border: 1px solid var(--blue-border);
-    border-radius: 8px;
-    background: var(--white);
-    padding: 10px;
-  }
-
-  .report-grade {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-
-  .grade-1 { background: #1A6A3A; }
-  .grade-2 { background: #A77914; }
-  .grade-3 { background: #C36E11; }
-  .grade-4 { background: #A02020; }
-
-  .report-line {
-    font-size: 12px;
-    color: var(--text-dark);
-    margin-bottom: 6px;
-  }
-
-  .report-pills {
+  .chip-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 8px;
   }
 
-  .pill {
-    padding: 3px 8px;
+  .field-chip {
     border-radius: 999px;
-    font-size: 10px;
+    padding: 6px 10px;
+    font-size: 11px;
     border: 1px solid var(--blue-border);
-    background: #F6FAFF;
+    background: #f5faff;
     color: var(--text-mid);
   }
 
-  .composer {
-    border-top: 1px solid var(--blue-border);
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.94);
-    display: flex;
-    gap: 8px;
-  }
-
-  .composer input {
-    flex: 1;
-    border: 1px solid var(--blue-border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-
-  .side-panel {
-    position: sticky;
-    top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .section-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    font-weight: 700;
-  }
-
-  .field-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    border-bottom: 1px solid #EEF4FC;
-  }
-
-  .field-key {
-    font-size: 11px;
-    color: var(--text-mid);
-  }
-
-  .field-value {
-    font-size: 11px;
-    color: var(--text-dark);
-    font-weight: 500;
-    text-align: right;
-  }
-
-  .field-value.missing {
-    color: #B5C7D8;
-    font-style: italic;
-    font-weight: 400;
+  .field-chip.missing {
+    background: #fff4e0;
+    border-color: #f0d8ac;
+    color: var(--warn-text);
   }
 
   .flag {
-    border-radius: 6px;
-    padding: 7px 9px;
-    font-size: 11px;
-    margin-bottom: 6px;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 12px;
     border: 1px solid transparent;
+  }
+
+  .flag + .flag {
+    margin-top: 10px;
   }
 
   .flag.info {
     background: var(--blue-light);
-    border-color: var(--blue-border);
     color: var(--blue-dark);
+    border-color: var(--blue-border);
   }
 
   .flag.warning {
     background: var(--warn-bg);
-    border-color: #F2D49A;
     color: var(--warn-text);
+    border-color: #f0d8ac;
   }
 
   .flag.critical {
-    background: #FDEDEE;
-    border-color: #E7B8B8;
+    background: #fdeded;
     color: var(--danger-text);
+    border-color: #e6bcbc;
   }
 
-  .grade-box {
-    background: linear-gradient(180deg, #fff6e8, #fff0d7);
-    border: 1px solid #f0d4a6;
-    border-radius: 16px;
-    padding: 12px;
-    color: #6F4A00;
-    font-size: 12px;
+  .detail-list {
+    display: grid;
+    gap: 10px;
   }
 
-  .grade-box .title {
-    font-weight: 700;
-    margin-bottom: 5px;
-  }
-
-  .confidence-track {
-    height: 8px;
-    border-radius: 99px;
-    overflow: hidden;
-    background: #E6EEF8;
-    margin-top: 6px;
-  }
-
-  .confidence-fill {
-    height: 8px;
-    background: var(--blue-mid);
-  }
-
-  .alert-info {
-    background: var(--blue-light);
-    color: var(--blue-dark);
+  .detail-row {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fbfdff, #f4f9fe);
     border: 1px solid var(--blue-border);
   }
 
-  @media (max-width: 1200px) {
-    .metrics-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .detail-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
   }
 
-  @media (max-width: 1000px) {
-    .session-top {
-      flex-direction: column;
-      align-items: flex-start;
-    }
+  .detail-value {
+    font-size: 13px;
+    color: var(--text-dark);
+  }
+
+  .sticky-panel {
+    position: sticky;
+    top: 84px;
+  }
+
+  .provisional-grade {
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #eff6fd, #e8f2fb);
+    border: 1px solid var(--blue-border);
+  }
+
+  .grade-label {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    margin-bottom: 4px;
+  }
+
+  .grade-note {
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+
+  .footer-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .helper-copy {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .error-box {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #fdecec;
+    color: var(--danger-text);
+    border: 1px solid #edc2c2;
+    font-size: 12px;
+  }
+
+  .success-box {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--ok-bg);
+    color: var(--ok-text);
+    border: 1px solid #b9dbc7;
+    font-size: 12px;
+  }
+
+  #loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 61, 122, 0.56);
+    z-index: 220;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    color: #fff;
+  }
+
+  #loading-overlay.show {
+    display: flex;
+  }
+
+  .loading-spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.25);
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .loading-sub {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.76);
+  }
+
+  @media (max-width: 1120px) {
     .session-grid {
       grid-template-columns: 1fr;
     }
-    .side-panel {
+
+    .sticky-panel {
       position: static;
+    }
+  }
+
+  @media (max-width: 920px) {
+    .intake-hero {
+      flex-direction: column;
+    }
+
+    .hero-actions {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .metric-grid,
+    .form-grid-2,
+    .form-grid-3 {
+      grid-template-columns: 1fr;
     }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="session-top">
-  <div>
-    <div class="page-heading">Active Session</div>
-    <div class="page-sub">
-      {{ session.first_name }} {{ session.last_name }} · Session {{ session_id }}
+<div class="session-shell">
+  <section class="intake-hero">
+    <div class="hero-copy">
+      <div class="hero-kicker">MRI + Clinical Intake</div>
+      <h1 id="hero-title">Complete the structured intake and generate the full report</h1>
+      <p>
+        The MRI segmentation output for this session is imported automatically. Fill the clinical form once, verify the key fields,
+        and NeuroAssist will perform one-shot reasoning from the registered profile, imaging metrics, and your intake data.
+      </p>
     </div>
-  </div>
-  <div class="session-actions">
-    <a class="btn btn-secondary" href="/report/{{ session_id }}" target="_blank">Open Report</a>
-  </div>
-</div>
-
-<div class="session-grid">
-  <section>
-    <div class="card patient-bar">
-      <div class="patient-main">
-        <div class="patient-avatar" id="patient-avatar">NA</div>
-        <div>
-          <div class="patient-name" id="patient-name">{{ session.first_name }} {{ session.last_name }}</div>
-          <div class="patient-meta" id="patient-meta">Loading patient details...</div>
-        </div>
+    <div class="hero-actions">
+      <div class="hero-stat">
+        <div class="hero-stat-label">Patient</div>
+        <div class="hero-stat-value" id="patient-name">{{ session.first_name }} {{ session.last_name }}</div>
       </div>
-      <div class="patient-progress">
-        <div class="flex items-center gap-8" style="justify-content:space-between; margin-bottom:4px;">
-          <span id="status-badge" class="badge badge-info">Session active</span>
-          <span id="completeness-label" class="text-xs text-mid">0%</span>
-        </div>
-        <div class="progress-bar"><div id="completeness-fill" class="progress-fill" style="width:0%"></div></div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Session</div>
+        <div class="hero-stat-value">{{ session_id }}</div>
       </div>
-    </div>
-
-    <div class="metrics-row" id="metrics-row"></div>
-
-    <div id="beva-banner" class="alert alert-info" style="display:none; margin-bottom:12px;"></div>
-
-    <div class="card chat-card">
-      <div class="chat-head">
-        <h3>Clinical Interview</h3>
-        <button id="bootstrap-btn" class="btn btn-secondary" type="button">Start Interview</button>
-      </div>
-
-      <div id="chat-messages" class="chat-messages"></div>
-
-      <div class="composer">
-        <input id="note-input" type="text" placeholder="Add clinician note or context..." />
-        <button id="send-note-btn" class="btn btn-primary" type="button">Send</button>
-      </div>
+      <a class="btn btn-secondary" href="/report/{{ session_id }}">Open latest report</a>
     </div>
   </section>
 
-  <aside class="side-panel">
-    <div class="card">
-      <div class="section-label">Completeness</div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-        <div id="ring-number" style="font-size:24px; font-weight:700; color:var(--blue-dark);">0%</div>
-        <div class="text-sm text-mid" id="remaining-fields">0 fields remaining</div>
+  <div class="metric-grid" id="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Loading</div>
+      <div class="metric-value">...</div>
+      <div class="metric-sub">Fetching latest MRI metrics</div>
+    </div>
+  </div>
+
+  <div class="session-grid">
+    <section>
+      <div class="card">
+        <div class="card-title">Clinical Intake Form</div>
+        <div class="intro-note">
+          Registered patient profile values including patient name, MRN, DOB, age, and biological sex are injected into the model automatically.
+          You do not need to retype MRI segmentation metrics from the external form because they are already pulled from this session's inference output.
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+        <div class="success-box" id="success-box"></div>
+
+        <form id="intake-form" class="intake-form" novalidate>
+          <div class="card" style="margin: 0;">
+            <div class="section-title">Registered Patient Profile</div>
+            <div class="detail-list">
+              <div class="detail-row">
+                <div class="detail-label">Registered Details</div>
+                <div class="detail-value" id="registered-details">Loading patient profile...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin: 0;">
+            <div class="section-title">Demographics And Performance Status</div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="age_at_diagnosis">Age at diagnosis</label>
+                <input class="form-input" type="number" id="age_at_diagnosis" min="0" max="120" placeholder="Auto-filled from DOB if available">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sex">Biological sex</label>
+                <select class="form-select" id="sex">
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other / not disclosed</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="handedness">Handedness</label>
+                <select class="form-select" id="handedness">
+                  <option value="">Not provided</option>
+                  <option value="Right">Right</option>
+                  <option value="Left">Left</option>
+                  <option value="Ambidextrous">Ambidextrous</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="karnofsky_score">Karnofsky score</label>
+                <input class="form-input" type="number" id="karnofsky_score" min="0" max="100" placeholder="0-100">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ecog_score">ECOG score</label>
+                <input class="form-input" type="number" id="ecog_score" min="0" max="5" placeholder="0-5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="mmse_score">MMSE score</label>
+                <input class="form-input" type="number" id="mmse_score" min="0" max="30" placeholder="0-30">
+              </div>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="comorbidities">Comorbidities</label>
+                <textarea class="form-input" id="comorbidities" placeholder="Hypertension, diabetes, anticoagulation, immunosuppression, etc."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="current_medications">Current medications</label>
+                <textarea class="form-input" id="current_medications" placeholder="Steroids, anticonvulsants, anticoagulants, other active medications"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin: 0;">
+            <div class="section-title">Symptoms And Presentation</div>
+            <div class="form-group">
+              <label class="form-label" for="presenting_symptoms">Presenting symptoms and clinical story</label>
+              <textarea class="form-input" id="presenting_symptoms" placeholder="Headache, focal deficits, seizures, aphasia, cognitive decline, onset pattern, duration, progression"></textarea>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="symptom_duration_days">Symptom duration (days)</label>
+                <input class="form-input" type="number" id="symptom_duration_days" min="0" placeholder="e.g. 42">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="headache_present">Headache present</label>
+                <select class="form-select" id="headache_present">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="headache_pattern">Headache pattern</label>
+                <input class="form-input" type="text" id="headache_pattern" placeholder="Progressive morning headache, pressure-like, etc.">
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="seizure_onset_new">New-onset seizure</label>
+                <select class="form-select" id="seizure_onset_new">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="nausea_vomiting">Nausea or vomiting</label>
+                <select class="form-select" id="nausea_vomiting">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="visual_field_deficit">Visual field deficit</label>
+                <select class="form-select" id="visual_field_deficit">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="speech_deficit">Speech deficit</label>
+                <select class="form-select" id="speech_deficit">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="motor_deficit">Motor deficit</label>
+                <select class="form-select" id="motor_deficit">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="visual_deficit">Visual deficit</label>
+                <select class="form-select" id="visual_deficit">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="cognitive_decline">Cognitive decline</label>
+                <select class="form-select" id="cognitive_decline">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="memory_deficit">Memory deficit</label>
+                <select class="form-select" id="memory_deficit">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="personality_change">Personality change</label>
+                <select class="form-select" id="personality_change">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="neurological_exam">Neurological examination / bedside findings</label>
+              <textarea class="form-input" id="neurological_exam" placeholder="Laterality, aphasia, neglect, cranial nerve findings, gait, sensory findings, raised ICP signs"></textarea>
+            </div>
+          </div>
+
+          <div class="card" style="margin: 0;">
+            <div class="section-title">Clinical History, Molecular Data, And Pathology</div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="prior_tumor_history">Prior tumor or CNS history</label>
+                <textarea class="form-input" id="prior_tumor_history" placeholder="Prior glioma, prior biopsy, radiation exposure, NF1/NF2, recurrent disease, prior imaging context"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="family_history">Family history / special risk factors</label>
+                <textarea class="form-input" id="family_history" placeholder="Family history of glioma, inherited syndrome, immunocompromise, pregnancy, special considerations"></textarea>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="idh_status">IDH status</label>
+                <select class="form-select" id="idh_status">
+                  <option value="">Not provided</option>
+                  <option value="IDH-wildtype">IDH-wildtype</option>
+                  <option value="IDH-mutant">IDH-mutant</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="mgmt_methylation">MGMT methylation</label>
+                <select class="form-select" id="mgmt_methylation">
+                  <option value="">Not provided</option>
+                  <option value="Methylated">Methylated</option>
+                  <option value="Unmethylated">Unmethylated</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="codeletion_1p19q">1p/19q codeletion</label>
+                <select class="form-select" id="codeletion_1p19q">
+                  <option value="">Not provided</option>
+                  <option value="Codeleted">Codeleted</option>
+                  <option value="Non-codeleted">Non-codeleted</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="tert_promoter_mutation">TERT promoter</label>
+                <select class="form-select" id="tert_promoter_mutation">
+                  <option value="">Not provided</option>
+                  <option value="Mutated">Mutated</option>
+                  <option value="Not mutated">Not mutated</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="egfr_amplification">EGFR amplification</label>
+                <select class="form-select" id="egfr_amplification">
+                  <option value="">Not provided</option>
+                  <option value="Amplified">Amplified</option>
+                  <option value="Not amplified">Not amplified</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cdkn2a_b_deletion">CDKN2A/B deletion</label>
+                <select class="form-select" id="cdkn2a_b_deletion">
+                  <option value="">Not provided</option>
+                  <option value="Deleted">Deleted</option>
+                  <option value="Not deleted">Not deleted</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="h3k27m_mutation">H3K27M status</label>
+                <select class="form-select" id="h3k27m_mutation">
+                  <option value="">Not provided</option>
+                  <option value="Mutated">Mutated</option>
+                  <option value="Not mutated">Not mutated</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="histology_type">Histology type</label>
+                <input class="form-input" type="text" id="histology_type" placeholder="Astrocytoma, GBM, oligodendroglioma, pending">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="necrosis_on_histology">Necrosis on histology</label>
+                <select class="form-select" id="necrosis_on_histology">
+                  <option value="">Not provided</option>
+                  <option value="true">Present</option>
+                  <option value="false">Absent</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="microvascular_proliferation">Microvascular proliferation</label>
+                <select class="form-select" id="microvascular_proliferation">
+                  <option value="">Not provided</option>
+                  <option value="true">Present</option>
+                  <option value="false">Absent</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ki67_index_percent">Ki-67 index (%)</label>
+                <input class="form-input" type="number" id="ki67_index_percent" min="0" max="100" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="mitotic_index">Mitotic index</label>
+                <input class="form-input" type="number" id="mitotic_index" min="0" step="1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pathology_notes">Pathology or molecular notes</label>
+              <textarea class="form-input" id="pathology_notes" placeholder="Biopsy date, frozen section, methylation classifier, special notes"></textarea>
+            </div>
+          </div>
+
+          <div class="card" style="margin: 0;">
+            <div class="section-title">Imaging Context And Treatment History</div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="enhancement_pattern">Enhancement pattern</label>
+                <input class="form-input" type="text" id="enhancement_pattern" placeholder="Ring-enhancing, patchy, minimal, nodular">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ring_enhancing">Ring-enhancing</label>
+                <select class="form-select" id="ring_enhancing">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="multifocal">Multifocal disease</label>
+                <select class="form-select" id="multifocal">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="crosses_midline">Crosses midline</label>
+                <select class="form-select" id="crosses_midline">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ependymal_invasion">Ependymal invasion</label>
+                <select class="form-select" id="ependymal_invasion">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="eloquent_cortex_involvement">Eloquent cortex involvement</label>
+                <select class="form-select" id="eloquent_cortex_involvement">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="necrosis_proportion_imaging">Necrosis proportion (imaging)</label>
+                <input class="form-input" type="number" id="necrosis_proportion_imaging" min="0" max="1" step="0.01" placeholder="0.00-1.00">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="dce_cbv_ratio">DCE/CBV ratio</label>
+                <input class="form-input" type="number" id="dce_cbv_ratio" min="0" step="0.01">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="adc_min_value">ADC minimum value</label>
+                <input class="form-input" type="number" id="adc_min_value" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="extent_of_resection">Extent of resection</label>
+                <select class="form-select" id="extent_of_resection">
+                  <option value="">Not provided</option>
+                  <option value="Biopsy only">Biopsy only</option>
+                  <option value="Subtotal resection">Subtotal resection</option>
+                  <option value="Near-total resection">Near-total resection</option>
+                  <option value="Gross total resection">Gross total resection</option>
+                  <option value="Not yet operated">Not yet operated</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prior_surgery_type">Prior surgery type</label>
+                <input class="form-input" type="text" id="prior_surgery_type" placeholder="Craniotomy, biopsy, none">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prior_temozolomide">Prior temozolomide</label>
+                <select class="form-select" id="prior_temozolomide">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="prior_cranial_irradiation">Prior cranial irradiation</label>
+                <select class="form-select" id="prior_cranial_irradiation">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="bevacizumab_use">Bevacizumab exposure</label>
+                <select class="form-select" id="bevacizumab_use">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="steroid_dose_mg">Steroid dose (mg)</label>
+                <input class="form-input" type="number" id="steroid_dose_mg" min="0" step="0.1">
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="ldh_level">LDH level</label>
+                <input class="form-input" type="number" id="ldh_level" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="csf_protein_elevated">CSF protein elevated</label>
+                <select class="form-select" id="csf_protein_elevated">
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="additional_imaging_notes">Additional imaging notes</label>
+                <input class="form-input" type="text" id="additional_imaging_notes" placeholder="Mass effect, diffusion restriction, spectroscopy, hemorrhage">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="clinician_notes">Additional clinician notes</label>
+              <textarea class="form-input" id="clinician_notes" placeholder="Anything else the reasoning/report should consider for MDT review"></textarea>
+            </div>
+          </div>
+
+          <div class="footer-actions">
+            <div class="helper-copy" id="submit-copy">Validated form submission will generate a full report directly, without an interactive question loop.</div>
+            <button class="btn btn-primary" id="generate-btn" type="submit">Generate Full Diagnostic Report</button>
+          </div>
+        </form>
       </div>
-      <div class="confidence-track"><div id="right-completeness-fill" class="confidence-fill" style="width:0%"></div></div>
-    </div>
+    </section>
 
-    <div class="card">
-      <div class="section-label">Key Fields</div>
-      <div id="key-fields"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-label">Auto-flags</div>
-      <div id="auto-flags" class="text-sm text-muted">No active flags</div>
-    </div>
-
-    <div class="card">
-      <div class="section-label">Provisional grade</div>
-      <div id="provisional-grade" class="grade-box">
-        <div class="title">No estimate yet</div>
-        <div>Confidence: <strong>0.00</strong></div>
-        <div class="confidence-track"><div class="confidence-fill" style="width:0%"></div></div>
-        <div class="text-xs mt-8">Report unlocks at 75% confidence</div>
+    <aside class="sticky-panel">
+      <div class="card">
+        <div class="card-title">Report Readiness</div>
+        <div class="detail-row">
+          <div class="detail-label">Structured completeness</div>
+          <div class="detail-value"><span id="completeness-percent">0%</span> <span class="badge badge-info" id="completeness-badge">Loading</span></div>
+        </div>
+        <div class="progress-bar mt-8">
+          <div class="progress-fill" id="completeness-fill" style="width: 0%;"></div>
+        </div>
+        <div class="helper-copy mt-8" id="missing-copy">Loading tracked field coverage...</div>
       </div>
-    </div>
-  </aside>
+
+      <div class="card mt-16">
+        <div class="card-title">Provisional Grade Signal</div>
+        <div class="provisional-grade">
+          <div class="grade-label" id="grade-label">Calculating...</div>
+          <div class="detail-value" id="grade-confidence">Confidence: --</div>
+          <div class="grade-note mt-8" id="grade-note">Waiting for session state...</div>
+        </div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-title">Tracked Key Fields</div>
+        <div class="chip-list" id="key-fields"></div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-title">Auto Flags</div>
+        <div id="auto-flags">
+          <div class="helper-copy">Loading automated flags...</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-title" id="loading-title">Generating full diagnostic report...</div>
+  <div class="loading-sub" id="loading-sub">NeuroAssist is validating the form and running one-shot reasoning.</div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  const SESSION_ID = "{{ session_id }}";
+  const SESSION_ID = {{ session_id|tojson }};
+  let stateCache = null;
 
-  let latestState = null;
-  let requestBusy = false;
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('intake-form').addEventListener('submit', submitIntakeForm);
+    loadState();
+  });
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
-  function badgeClass(tone) {
-    if (tone === "ok") return "badge-ok";
-    if (tone === "warn") return "badge-warn";
-    if (tone === "danger") return "badge-danger";
-    return "badge-info";
-  }
-
-  function gradeClass(label) {
-    const text = (label || "").toLowerCase();
-    if (text.includes("grade 4")) return "grade-4";
-    if (text.includes("grade 3")) return "grade-3";
-    if (text.includes("grade 2")) return "grade-2";
-    return "grade-1";
-  }
-
-  async function fetchState() {
-    const res = await fetch(`/session/${SESSION_ID}/state`);
-    if (!res.ok) {
-      throw new Error("Failed to load session state");
+  async function loadState() {
+    try {
+      const response = await fetch(`/session/${SESSION_ID}/state`);
+      if (!response.ok) {
+        throw new Error('Failed to load the current session state.');
+      }
+      stateCache = await response.json();
+      renderSessionState(stateCache);
+      hydrateForm(stateCache);
+    } catch (error) {
+      showError(error.message || 'Unable to load session data.');
     }
-    return res.json();
   }
 
-  async function refreshState() {
-    latestState = await fetchState();
-    renderState(latestState);
-  }
+  function renderSessionState(state) {
+    const session = state.session || {};
+    const completeness = state.completeness || {};
+    const grade = state.provisional_grade || {};
+    const metrics = state.metrics || [];
 
-  function renderState(state) {
-    const sess = state.session || {};
-    const comp = state.completeness || {};
+    document.getElementById('patient-name').textContent = session.full_name || 'Unnamed patient';
+    document.getElementById('registered-details').textContent = [
+      session.full_name || 'Unnamed patient',
+      session.mrn ? `MRN ${session.mrn}` : 'MRN not provided',
+      session.date_of_birth ? `DOB ${session.date_of_birth}` : 'DOB not provided',
+      session.age !== null && session.age !== undefined ? `${session.age} years` : 'Age not available',
+      session.sex || 'Biological sex not provided',
+    ].join(' | ');
 
-    const initials = `${(sess.first_name || "").slice(0,1)}${(sess.last_name || "").slice(0,1)}`.toUpperCase() || "NA";
-    document.getElementById("patient-avatar").textContent = initials;
-    document.getElementById("patient-name").textContent = sess.full_name || "Unknown patient";
-    document.getElementById("patient-meta").textContent = `${sess.age || "-"} y/o · ${sess.sex || "-"} · MRN ${sess.mrn || "-"} · Session ${sess.session_id || ""}`;
+    document.getElementById('completeness-percent').textContent = `${completeness.percent || 0}%`;
+    document.getElementById('completeness-fill').style.width = `${completeness.percent || 0}%`;
+    document.getElementById('completeness-badge').textContent = (completeness.status_badge || {}).label || 'Unknown';
+    document.getElementById('missing-copy').textContent = `${completeness.missing_count || 0} tracked fields still missing from the structured context.`;
 
-    const percent = Number(comp.percent || 0);
-    document.getElementById("completeness-label").textContent = `${percent}%`;
-    document.getElementById("completeness-fill").style.width = `${percent}%`;
+    document.getElementById('grade-label').textContent = grade.label || 'Not available';
+    document.getElementById('grade-confidence').textContent = `Confidence: ${formatConfidence(grade.confidence)}`;
+    document.getElementById('grade-note').textContent = grade.note || 'No provisional grade note available.';
 
-    const statusBadge = document.getElementById("status-badge");
-    const status = comp.status_badge || { tone: "info", label: "Session active" };
-    statusBadge.className = `badge ${badgeClass(status.tone)}`;
-    statusBadge.textContent = status.label || "Session active";
-
-    document.getElementById("ring-number").textContent = `${percent}%`;
-    document.getElementById("remaining-fields").textContent = `${comp.missing_count || 0} fields remaining`;
-    document.getElementById("right-completeness-fill").style.width = `${percent}%`;
-
-    renderMetrics(state.metrics || []);
+    renderMetrics(metrics);
     renderKeyFields(state.key_fields || []);
     renderFlags(state.auto_flags || []);
-    renderProvisional(state.provisional_grade || {});
-    renderConversation(state.conversation || []);
-
-    const beva = (state.auto_flags || []).find((f) => (f.text || "").toLowerCase().includes("anti-vegf"));
-    const bevaBanner = document.getElementById("beva-banner");
-    if (beva) {
-      bevaBanner.style.display = "block";
-      bevaBanner.textContent = beva.text;
-    } else {
-      bevaBanner.style.display = "none";
-      bevaBanner.textContent = "";
-    }
-
-    document.getElementById("bootstrap-btn").style.display = (state.conversation || []).length ? "none" : "inline-flex";
   }
 
-  function renderMetrics(cards) {
-    const root = document.getElementById("metrics-row");
-    if (!cards.length) {
-      root.innerHTML = `<div class="metric-card"><div class="metric-label">Metrics</div><div class="metric-sub">Upload a scan to view metrics</div></div>`;
+  function renderMetrics(metrics) {
+    const host = document.getElementById('metrics-grid');
+    if (!metrics.length) {
+      host.innerHTML = `
+        <div class="metric-card">
+          <div class="metric-label">MRI metrics</div>
+          <div class="metric-value">Unavailable</div>
+          <div class="metric-sub">Run inference before generating the report.</div>
+        </div>
+      `;
       return;
     }
 
-    root.innerHTML = cards.map((c) => `
-      <div class="metric-card">
-        <div class="metric-label">${escapeHtml(c.label)}</div>
-        <div class="metric-value">${escapeHtml(c.value)} <span class="metric-unit">${escapeHtml(c.unit || "")}</span></div>
-        <div class="metric-sub ${escapeHtml(c.severity || "ok")}">${escapeHtml(c.subtitle || "")}</div>
+    host.innerHTML = metrics.map(metric => `
+      <div class="metric-card ${escapeHtml(metric.severity || 'ok')}">
+        <div class="metric-label">${escapeHtml(metric.label || 'Metric')}</div>
+        <div class="metric-value">${escapeHtml(String(metric.value ?? '0'))}${metric.unit ? ` <span style="font-size:13px;">${escapeHtml(metric.unit)}</span>` : ''}</div>
+        <div class="metric-sub">${escapeHtml(metric.subtitle || '')}</div>
       </div>
-    `).join("");
+    `).join('');
   }
 
   function renderKeyFields(fields) {
-    const root = document.getElementById("key-fields");
-    root.innerHTML = fields.map((f) => `
-      <div class="field-row">
-        <div class="field-key">${escapeHtml(f.label)}</div>
-        <div class="field-value ${f.missing ? "missing" : ""}">${escapeHtml(f.value)}</div>
-      </div>
-    `).join("");
+    const host = document.getElementById('key-fields');
+    if (!fields.length) {
+      host.innerHTML = '<div class="helper-copy">No tracked fields available.</div>';
+      return;
+    }
+
+    host.innerHTML = fields.map(field => `
+      <span class="field-chip ${field.missing ? 'missing' : ''}">
+        ${escapeHtml(field.label || field.key || 'Field')}: ${escapeHtml(field.value || 'Not provided')}
+      </span>
+    `).join('');
   }
 
   function renderFlags(flags) {
-    const root = document.getElementById("auto-flags");
+    const host = document.getElementById('auto-flags');
     if (!flags.length) {
-      root.textContent = "No active flags";
+      host.innerHTML = '<div class="helper-copy">No automated caution flags on the current structured data.</div>';
       return;
     }
 
-    root.innerHTML = flags.map((f) => `
-      <div class="flag ${escapeHtml(f.severity || "info")}">${escapeHtml(f.text || "")}</div>
-    `).join("");
+    host.innerHTML = flags.map(flag => `
+      <div class="flag ${escapeHtml(flag.severity || 'info')}">${escapeHtml(flag.text || '')}</div>
+    `).join('');
   }
 
-  function renderProvisional(grade) {
-    const root = document.getElementById("provisional-grade");
-    const confidence = Number(grade.confidence || 0);
-    const pct = Math.max(0, Math.min(100, Math.round(confidence * 100)));
+  function hydrateForm(state) {
+    const ctx = state.patient_context || {};
+    const symptoms = ctx.symptoms || {};
+    const clinical = ctx.clinical || {};
+    const genomics = ctx.genomics || {};
+    const vasari = ctx.vasari || {};
+    const pathology = ctx.pathology || {};
+    const labs = ctx.labs || {};
+    const treatment = ctx.treatment_history || {};
+    const session = state.session || {};
 
-    root.innerHTML = `
-      <div class="title">${escapeHtml(grade.label || "No estimate yet")}</div>
-      <div>Confidence: <strong>${confidence.toFixed(2)}</strong></div>
-      <div class="confidence-track"><div class="confidence-fill" style="width:${pct}%"></div></div>
-      <div class="text-xs mt-8">${escapeHtml(grade.note || "Report unlocks at 75% confidence")}</div>
-    `;
+    setValue('age_at_diagnosis', clinical.age_at_diagnosis ?? session.age ?? '');
+    setValue('sex', clinical.sex ?? session.sex ?? '');
+    setValue('handedness', clinical.handedness ?? '');
+    setValue('karnofsky_score', clinical.karnofsky_score ?? '');
+    setValue('ecog_score', clinical.ecog_score ?? '');
+    setValue('mmse_score', clinical.mmse_score ?? '');
+    setValue('comorbidities', clinical.comorbidities ?? '');
+    setValue('current_medications', clinical.current_medications ?? '');
+    setValue('extent_of_resection', clinical.extent_of_resection ?? '');
+    setValue('prior_tumor_history', clinical.prior_tumor_history ?? '');
+    setValue('family_history', clinical.family_history ?? '');
+    setValue('clinician_notes', clinical.clinician_notes ?? '');
+
+    setValue('presenting_symptoms', symptoms.presenting_symptoms ?? '');
+    setValue('symptom_duration_days', symptoms.symptom_duration_days ?? '');
+    setValue('headache_present', boolToSelect(symptoms.headache_present));
+    setValue('headache_pattern', symptoms.headache_pattern ?? '');
+    setValue('seizure_onset_new', boolToSelect(symptoms.seizure_onset_new));
+    setValue('nausea_vomiting', boolToSelect(symptoms.nausea_vomiting));
+    setValue('visual_field_deficit', boolToSelect(symptoms.visual_field_deficit));
+    setValue('speech_deficit', boolToSelect(clinical.speech_deficit));
+    setValue('motor_deficit', boolToSelect(clinical.motor_deficit));
+    setValue('visual_deficit', boolToSelect(clinical.visual_deficit));
+    setValue('cognitive_decline', boolToSelect(symptoms.cognitive_decline));
+    setValue('memory_deficit', boolToSelect(symptoms.memory_deficit));
+    setValue('personality_change', boolToSelect(symptoms.personality_change));
+    setValue('neurological_exam', symptoms.neurological_exam ?? '');
+
+    setValue('idh_status', genomics.idh_status ?? '');
+    setValue('mgmt_methylation', genomics.mgmt_methylation ?? '');
+    setValue('codeletion_1p19q', genomics.codeletion_1p19q ?? '');
+    setValue('tert_promoter_mutation', genomics.tert_promoter_mutation ?? '');
+    setValue('egfr_amplification', genomics.egfr_amplification ?? '');
+    setValue('cdkn2a_b_deletion', genomics.cdkn2a_b_deletion ?? '');
+    setValue('h3k27m_mutation', genomics.h3k27m_mutation ?? '');
+
+    setValue('histology_type', pathology.histology_type ?? '');
+    setValue('necrosis_on_histology', boolToSelect(pathology.necrosis_on_histology));
+    setValue('microvascular_proliferation', boolToSelect(pathology.microvascular_proliferation));
+    setValue('ki67_index_percent', pathology.ki67_index_percent ?? '');
+    setValue('mitotic_index', pathology.mitotic_index ?? '');
+    setValue('pathology_notes', pathology.pathology_notes ?? '');
+
+    setValue('enhancement_pattern', vasari.enhancement_pattern ?? '');
+    setValue('ring_enhancing', boolToSelect(vasari.ring_enhancing));
+    setValue('multifocal', boolToSelect(vasari.multifocal));
+    setValue('crosses_midline', boolToSelect(vasari.crosses_midline));
+    setValue('ependymal_invasion', boolToSelect(vasari.ependymal_invasion));
+    setValue('eloquent_cortex_involvement', boolToSelect(vasari.eloquent_cortex_involvement));
+    setValue('necrosis_proportion_imaging', vasari.necrosis_proportion_imaging ?? '');
+    setValue('dce_cbv_ratio', vasari.dce_cbv_ratio ?? '');
+    setValue('adc_min_value', vasari.adc_min_value ?? '');
+    setValue('additional_imaging_notes', vasari.additional_imaging_notes ?? '');
+
+    setValue('prior_surgery_type', treatment.prior_surgery_type ?? '');
+    setValue('prior_temozolomide', boolToSelect(treatment.prior_temozolomide));
+    setValue('prior_cranial_irradiation', boolToSelect(treatment.prior_cranial_irradiation));
+    setValue('bevacizumab_use', boolToSelect(treatment.bevacizumab_use));
+
+    setValue('steroid_dose_mg', labs.steroid_dose_mg ?? '');
+    setValue('ldh_level', labs.ldh_level ?? '');
+    setValue('csf_protein_elevated', boolToSelect(labs.csf_protein_elevated));
   }
 
-  function renderConversation(items) {
-    const root = document.getElementById("chat-messages");
+  async function submitIntakeForm(event) {
+    event.preventDefault();
+    clearMessages();
 
-    if (!items.length) {
-      root.innerHTML = `<div class="msg assistant">No conversation yet. Click <strong>Start Interview</strong> to begin the clinical interview.</div>`;
-      root.scrollTop = root.scrollHeight;
+    const contextUpdates = buildContextUpdates();
+    const validationErrors = validateContextUpdates(contextUpdates);
+    if (validationErrors.length) {
+      showError(validationErrors.join(' '));
       return;
     }
 
-    root.innerHTML = items.map((item) => {
-      if (item.role === "user") {
-        return `<div class="msg user">${escapeHtml(item.text || "")}</div>`;
-      }
-
-      if (item.role === "tool" && item.kind === "tool" && item.payload) {
-        return renderToolBubble(item.payload);
-      }
-
-      if (item.kind === "json" && item.payload) {
-        const payload = item.payload;
-        if (payload.mode === "final_report") {
-          return renderReportBubble(payload);
-        }
-        if (payload.mode === "interview") {
-          return `<div class="msg assistant">${escapeHtml(payload.assistant_message || item.text || "")}</div>`;
-        }
-      }
-
-      return `<div class="msg assistant">${escapeHtml(item.text || "")}</div>`;
-    }).join("");
-
-    root.scrollTop = root.scrollHeight;
-  }
-
-  function renderToolBubble(payload) {
-    const toolName = payload.tool_name || "tool";
-    const summary = payload.ok === false
-      ? (payload.error || "Tool execution failed")
-      : "Tool executed";
-    return `
-      <div class="msg assistant">
-        <div class="question-head">Tool · ${escapeHtml(toolName)}</div>
-        <div class="text-xs text-muted">${escapeHtml(summary)}</div>
-      </div>
-    `;
-  }
-
-  function renderReportBubble(report) {
-    const gradeLabel = `WHO Grade ${escapeHtml(report.who_grade_predicted || "-")}`;
-    const confidence = Number(report.confidence_score || 0);
-    const confidencePct = Math.max(0, Math.min(100, Math.round(confidence * 100)));
-    const factorsFav = report.factors_favorable || [];
-    const factorsUnfav = report.factors_unfavorable || [];
-    const flags = report.treatment_flags || [];
-
-    return `
-      <div class="msg assistant">
-        <div class="report-card">
-          <div class="report-grade ${gradeClass(gradeLabel)}">${gradeLabel}</div>
-          <div class="report-line"><strong>${escapeHtml(report.diagnosis_label || "Diagnosis pending")}</strong></div>
-          <div class="report-line">Confidence: ${confidence.toFixed(2)}</div>
-          <div class="confidence-track"><div class="confidence-fill" style="width:${confidencePct}%"></div></div>
-          <div class="report-line">Survival: ${escapeHtml(report.survival_category || "-")} · ${escapeHtml(report.estimated_median_months || "-")}</div>
-          <div class="report-pills">
-            ${factorsFav.map((f) => `<span class="pill">+ ${escapeHtml(f)}</span>`).join("")}
-            ${factorsUnfav.map((f) => `<span class="pill">- ${escapeHtml(f)}</span>`).join("")}
-          </div>
-          <div class="report-pills">
-            ${flags.map((f) => `<span class="pill">${escapeHtml((f.severity || "info").toUpperCase())}: ${escapeHtml(f.message || f.text || "")}</span>`).join("")}
-          </div>
-          <div class="report-line">${escapeHtml(report.report_text || report.recommendation_summary || "")}</div>
-          <div class="text-xs text-muted">${escapeHtml(report.disclaimer || "NeuroAssist is a clinical decision support tool. All outputs must be reviewed by a qualified neuro-oncologist before any clinical action is taken.")}</div>
-          <div class="mt-8" style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a class="btn btn-secondary" href="/report/${encodeURIComponent(SESSION_ID)}" target="_blank">Open report</a>
-            <a class="btn btn-secondary" href="/report/${encodeURIComponent(SESSION_ID)}/print" target="_blank">Download report PDF</a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function sendChatRequest(payload) {
-    if (requestBusy) {
-      throw new Error("Please wait. Previous request is still processing.");
-    }
-    requestBusy = true;
+    const button = document.getElementById('generate-btn');
+    button.disabled = true;
+    showLoading('Generating full diagnostic report...', 'NeuroAssist is validating the intake form and composing the detailed report.');
 
     try {
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const response = await fetch(`/session/${SESSION_ID}/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context_updates: contextUpdates }),
       });
 
-      let data = {};
-      try {
-        data = await res.json();
-      } catch (jsonErr) {
-        data = {};
+      const payload = await response.json();
+      if (!response.ok) {
+        const detail = Array.isArray(payload.detail) ? payload.detail.join(' ') : (payload.detail || payload.error || 'Report generation failed.');
+        throw new Error(detail);
       }
 
-      if (res.ok) {
-        return data;
-      }
-
-      throw new Error(data.message || data.error || `Chat request failed (${res.status})`);
-    } finally {
-      requestBusy = false;
+      showSuccess('Clinical intake verified. Redirecting to the full diagnostic report...');
+      window.location.href = `/report/${SESSION_ID}`;
+    } catch (error) {
+      hideLoading();
+      button.disabled = false;
+      showError(error.message || 'Unable to generate the report.');
     }
   }
 
-  async function sendNote() {
-    const input = document.getElementById("note-input");
-    const text = input.value.trim();
-    if (!text) return;
+  function buildContextUpdates() {
+    return compactSections({
+      symptoms: {
+        presenting_symptoms: readValue('presenting_symptoms'),
+        symptom_duration_days: readInt('symptom_duration_days'),
+        headache_present: readBoolean('headache_present'),
+        headache_pattern: readValue('headache_pattern'),
+        seizure_onset_new: readBoolean('seizure_onset_new'),
+        nausea_vomiting: readBoolean('nausea_vomiting'),
+        cognitive_decline: readBoolean('cognitive_decline'),
+        memory_deficit: readBoolean('memory_deficit'),
+        personality_change: readBoolean('personality_change'),
+        visual_field_deficit: readBoolean('visual_field_deficit'),
+        neurological_exam: readValue('neurological_exam'),
+      },
+      clinical: {
+        age_at_diagnosis: readInt('age_at_diagnosis'),
+        sex: readValue('sex') || ((stateCache || {}).session || {}).sex || null,
+        handedness: readValue('handedness'),
+        karnofsky_score: readInt('karnofsky_score'),
+        ecog_score: readInt('ecog_score'),
+        mmse_score: readInt('mmse_score'),
+        speech_deficit: readBoolean('speech_deficit'),
+        motor_deficit: readBoolean('motor_deficit'),
+        visual_deficit: readBoolean('visual_deficit'),
+        comorbidities: readValue('comorbidities'),
+        current_medications: readValue('current_medications'),
+        extent_of_resection: readValue('extent_of_resection'),
+        prior_tumor_history: readValue('prior_tumor_history'),
+        family_history: readValue('family_history'),
+        clinician_notes: readValue('clinician_notes'),
+      },
+      genomics: {
+        idh_status: readValue('idh_status'),
+        mgmt_methylation: readValue('mgmt_methylation'),
+        codeletion_1p19q: readValue('codeletion_1p19q'),
+        tert_promoter_mutation: readValue('tert_promoter_mutation'),
+        egfr_amplification: readValue('egfr_amplification'),
+        cdkn2a_b_deletion: readValue('cdkn2a_b_deletion'),
+        h3k27m_mutation: readValue('h3k27m_mutation'),
+      },
+      vasari: {
+        enhancement_pattern: readValue('enhancement_pattern'),
+        ring_enhancing: readBoolean('ring_enhancing'),
+        multifocal: readBoolean('multifocal'),
+        crosses_midline: readBoolean('crosses_midline'),
+        ependymal_invasion: readBoolean('ependymal_invasion'),
+        eloquent_cortex_involvement: readBoolean('eloquent_cortex_involvement'),
+        necrosis_proportion_imaging: readFloat('necrosis_proportion_imaging'),
+        dce_cbv_ratio: readFloat('dce_cbv_ratio'),
+        adc_min_value: readFloat('adc_min_value'),
+        additional_imaging_notes: readValue('additional_imaging_notes'),
+      },
+      pathology: {
+        histology_type: readValue('histology_type'),
+        necrosis_on_histology: readBoolean('necrosis_on_histology'),
+        microvascular_proliferation: readBoolean('microvascular_proliferation'),
+        ki67_index_percent: readFloat('ki67_index_percent'),
+        mitotic_index: readInt('mitotic_index'),
+        pathology_notes: readValue('pathology_notes'),
+      },
+      labs: {
+        steroid_dose_mg: readFloat('steroid_dose_mg'),
+        ldh_level: readFloat('ldh_level'),
+        csf_protein_elevated: readBoolean('csf_protein_elevated'),
+      },
+      treatment_history: {
+        prior_surgery_type: readValue('prior_surgery_type'),
+        prior_temozolomide: readBoolean('prior_temozolomide'),
+        prior_cranial_irradiation: readBoolean('prior_cranial_irradiation'),
+        bevacizumab_use: readBoolean('bevacizumab_use'),
+      },
+    });
+  }
 
-    try {
-      await sendChatRequest({
-        session_id: SESSION_ID,
-        user_message: text,
+  function validateContextUpdates(contextUpdates) {
+    const errors = [];
+    const session = ((stateCache || {}).session || {});
+    const symptoms = contextUpdates.symptoms || {};
+    const clinical = contextUpdates.clinical || {};
+    const metrics = (stateCache || {}).metrics || [];
+    const imagingAvailable = Boolean((stateCache || {}).imaging_available);
+
+    if (!imagingAvailable || !metrics.length) {
+      errors.push('MRI inference data is required before report generation.');
+    }
+    if ((clinical.age_at_diagnosis === null || clinical.age_at_diagnosis === undefined) && (session.age === null || session.age === undefined)) {
+      errors.push('Age is required.');
+    }
+    if (!clinical.sex && !session.sex) {
+      errors.push('Biological sex is required.');
+    }
+
+    const hasSymptoms = Boolean(
+      symptoms.presenting_symptoms ||
+      symptoms.symptom_duration_days ||
+      symptoms.neurological_exam ||
+      clinical.speech_deficit !== undefined ||
+      clinical.motor_deficit !== undefined ||
+      clinical.visual_deficit !== undefined
+    );
+    if (!hasSymptoms) {
+      errors.push('Please provide symptom history, duration, or neurological findings.');
+    }
+
+    return errors;
+  }
+
+  function compactSections(source) {
+    const output = {};
+    Object.entries(source).forEach(([section, values]) => {
+      const cleaned = {};
+      Object.entries(values).forEach(([key, value]) => {
+        if (value === null || value === undefined) {
+          return;
+        }
+        if (typeof value === 'string' && !value.trim()) {
+          return;
+        }
+        cleaned[key] = value;
       });
-      input.value = "";
-      await refreshState();
-    } catch (err) {
-      showToast(err.message || "Failed to send note");
-    }
-  }
-
-  async function bootstrapQuestion() {
-    try {
-      await sendChatRequest({ session_id: SESSION_ID, user_message: "" });
-      await refreshState();
-    } catch (err) {
-      showToast(err.message || "Unable to start interview");
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    const sendBtn = document.getElementById("send-note-btn");
-    const noteInput = document.getElementById("note-input");
-    const bootstrapBtn = document.getElementById("bootstrap-btn");
-
-    sendBtn.addEventListener("click", sendNote);
-    noteInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendNote();
+      if (Object.keys(cleaned).length) {
+        output[section] = cleaned;
       }
     });
-    bootstrapBtn.addEventListener("click", bootstrapQuestion);
+    return output;
+  }
 
-    try {
-      await refreshState();
-      const hasConversation = (latestState?.conversation || []).length > 0;
-      if (!hasConversation) {
-        await bootstrapQuestion();
-      }
-    } catch (err) {
-      showToast(err.message || "Failed to load session view");
+  function readValue(id) {
+    const element = document.getElementById(id);
+    return element ? element.value.trim() : '';
+  }
+
+  function readInt(id) {
+    const raw = readValue(id);
+    if (!raw) {
+      return null;
     }
-  });
+    const parsed = parseInt(raw, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  function readFloat(id) {
+    const raw = readValue(id);
+    if (!raw) {
+      return null;
+    }
+    const parsed = parseFloat(raw);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  function readBoolean(id) {
+    const raw = readValue(id).toLowerCase();
+    if (!raw) {
+      return null;
+    }
+    if (raw === 'true' || raw === 'yes' || raw === 'present') {
+      return true;
+    }
+    if (raw === 'false' || raw === 'no' || raw === 'absent') {
+      return false;
+    }
+    return null;
+  }
+
+  function setValue(id, value) {
+    const element = document.getElementById(id);
+    if (!element || value === null || value === undefined) {
+      return;
+    }
+    element.value = value;
+  }
+
+  function boolToSelect(value) {
+    if (value === true || String(value).toLowerCase() === 'true') {
+      return 'true';
+    }
+    if (value === false || String(value).toLowerCase() === 'false') {
+      return 'false';
+    }
+    return '';
+  }
+
+  function formatConfidence(value) {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return 'Not available';
+    }
+    return `${numeric.toFixed(2)} / 1.00`;
+  }
+
+  function showError(message) {
+    const box = document.getElementById('error-box');
+    box.textContent = message;
+    box.style.display = 'block';
+    document.getElementById('success-box').style.display = 'none';
+  }
+
+  function showSuccess(message) {
+    const box = document.getElementById('success-box');
+    box.textContent = message;
+    box.style.display = 'block';
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  function clearMessages() {
+    document.getElementById('error-box').style.display = 'none';
+    document.getElementById('success-box').style.display = 'none';
+  }
+
+  function showLoading(title, subtitle) {
+    document.getElementById('loading-title').textContent = title;
+    document.getElementById('loading-sub').textContent = subtitle;
+    document.getElementById('loading-overlay').classList.add('show');
+  }
+
+  function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
 </script>
 {% endblock %}

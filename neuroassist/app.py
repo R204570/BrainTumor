@@ -31,15 +31,17 @@ def create_app(config_class=Config) -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(config_class)
     app.logger.warning(
-        "[app.py] config loaded OLLAMA_MODEL=%s OLLAMA_BASE_URL=%s",
-        app.config.get("OLLAMA_MODEL"),
-        app.config.get("OLLAMA_BASE_URL"),
+        "[app.py] config loaded LLM_PROVIDER=%s GROQ_MODEL=%s GROQ_BASE_URL=%s LLM_TIMEOUT_SECONDS=%s",
+        app.config.get("LLM_PROVIDER"),
+        app.config.get("GROQ_MODEL"),
+        app.config.get("GROQ_BASE_URL"),
+        app.config.get("LLM_TIMEOUT_SECONDS"),
     )
 
     _ensure_runtime_dirs(app)
 
     # Initialize DB pool at startup so DB errors surface early.
-    from db.connection import bootstrap_database, init_pool
+    from db.connection import bootstrap_database, ensure_schema_compatibility, init_pool
 
     try:
         init_pool()
@@ -48,6 +50,8 @@ def create_app(config_class=Config) -> Flask:
             bootstrap_database()
         else:
             raise
+    else:
+        ensure_schema_compatibility()
 
     # Register blueprints.
     from routes.chat import chat_bp

@@ -2,7 +2,7 @@
 
 Implemented state:
 - Sprint 1: Flask foundation + DB schema + session creation + MRI upload/inference ingest
-- Sprint 2: LLM + RAG loop + full `/chat` backend flow + LLM JSON tests
+- Sprint 2: LLM + RAG foundation + structured report JSON tests
 - Sprint 3: Full `session.html` 3-panel clinician UI with live state
 - Sprint 4: Standalone report view + print/PDF stub + KB seeder + resilience hardening
 
@@ -63,9 +63,8 @@ python -m scripts.seed_knowledge_base --append
 ### Reliability / Error Handling
 - DB query execution auto-retries once on disconnect (`OperationalError`/`InterfaceError`)
 - Groq call path includes exponential backoff on rate limits
-- `/chat` returns safe structured errors for:
+- Final report generation returns safe structured errors for:
   - invalid LLM JSON after retry
-  - API rate limiting
   - upstream LLM service failures
 
 ## Tests

@@ -312,7 +312,7 @@
   <div class="hero-copy">
     <div class="hero-kicker">Clinical Decision Support</div>
     <h1>Start a New Diagnostic Session</h1>
-    <p>Enter patient details and upload an MRI scan. NeuroAssist will run 3D U-Net tumor segmentation and guide you through a structured clinical interview to generate a WHO 2021-compliant diagnostic report.</p>
+    <p>Enter patient details and upload an MRI scan. NeuroAssist will run 3D U-Net tumor segmentation, open a structured clinical intake form, and generate a WHO 2021-compliant diagnostic report from the verified inputs.</p>
   </div>
   <div class="hero-highlights">
     <div class="hero-stat">
@@ -321,7 +321,7 @@
     </div>
     <div class="hero-stat">
       <div class="hero-stat-label">Output</div>
-      <div class="hero-stat-value">Segmentation, interview, report</div>
+      <div class="hero-stat-value">Segmentation, intake, report</div>
     </div>
   </div>
 </div>
@@ -340,7 +340,7 @@
   <div class="step-line"></div>
   <div class="step">
     <div class="step-dot">3</div>
-    <span>Clinical Interview</span>
+    <span>Clinical Intake</span>
   </div>
   <div class="step-line"></div>
   <div class="step">
@@ -443,7 +443,7 @@
       </div>
       <div class="info-item">
         <div class="info-num">2</div>
-        <div><strong>Clinical interview</strong> - a local Ollama model runs a plain-text clinician interview to collect the symptoms, genomics, pathology, and treatment context that imaging alone cannot provide.</div>
+        <div><strong>Clinical intake form</strong> - the clinician fills a structured form once, and the local model reasons over the verified demographics, symptoms, genomics, pathology, and treatment context together with imaging.</div>
       </div>
       <div class="info-item">
         <div class="info-num">3</div>

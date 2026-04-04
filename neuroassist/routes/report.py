@@ -145,8 +145,10 @@ def _render_report(session_id: str, print_mode: bool):
             "survival_category": survival_outlook.get("category"),
             "survival_score": survival_outlook.get("score"),
             "estimated_median_months": survival_outlook.get("estimated_median_months"),
+            "report_text": full.get("report_text"),
             "recommendation_summary": full.get("recommendation_summary"),
             "disclaimer": full.get("disclaimer"),
+            "structured_report": full.get("structured_report"),
         }
 
     if report and "disclaimer" not in report:
@@ -169,6 +171,17 @@ def _render_report(session_id: str, print_mode: bool):
 
     if report and not report.get("recommendation_summary"):
         report["recommendation_summary"] = full.get("recommendation_summary")
+
+    if report and not report.get("structured_report") and isinstance(full.get("structured_report"), dict):
+        report["structured_report"] = full.get("structured_report")
+
+    structured = report.get("structured_report") if isinstance(report.get("structured_report"), dict) else {}
+    if report and not report.get("report_markdown"):
+        report["report_markdown"] = (
+            (structured.get("report_markdown") if structured else None)
+            or report.get("report_text")
+            or report.get("recommendation_summary")
+        )
 
     return render_template(
         "report.html",

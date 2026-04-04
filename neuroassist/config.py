@@ -59,25 +59,31 @@ class Config:
     )
     AUTO_BOOTSTRAP_DB: bool = os.environ.get("AUTO_BOOTSTRAP_DB", "True").lower() == "true"
 
-    # Ollama / LLM (local model via LangGraph)
-    # NO RATE LIMITS - completely free and unlimited
-    OLLAMA_MODEL: str = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
-    OLLAMA_BASE_URL: str = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    # LLM provider
+    LLM_PROVIDER: str = _env_with_fallback("LLM_PROVIDER", default="groq").lower()
+    GROQ_API_KEY: str = _env_with_fallback("GROQ_API_KEY")
+    GROQ_MODEL: str = _env_with_fallback("GROQ_MODEL", default="llama-3.3-70b-versatile")
+    GROQ_BASE_URL: str = _env_with_fallback("GROQ_BASE_URL", default="https://api.groq.com/openai/v1")
+
+    # Legacy local-model settings retained only for optional fallback/debugging
+    OLLAMA_MODEL: str = _env_with_fallback("OLLAMA_MODEL", default="llama3.1:8b")
+    OLLAMA_BASE_URL: str = _env_with_fallback("OLLAMA_BASE_URL", default="http://localhost:11434")
+    OLLAMA_NUM_CTX: int = int(_env_with_fallback("OLLAMA_NUM_CTX", default="8192"))
     LLM_TEMPERATURE: float = float(os.environ.get("LLM_TEMPERATURE", "0.3"))
     LLM_TOP_P: float = float(os.environ.get("LLM_TOP_P", "0.9"))
-    LLM_MAX_OUTPUT_TOKENS: int = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", "2048"))
-    LLM_TIMEOUT_SECONDS: int = int(os.environ.get("LLM_TIMEOUT_SECONDS", "3600"))  # 1 hour, effectively no timeout
-    LLM_MAX_INTERVIEW_TURNS: int = int(os.environ.get("LLM_MAX_INTERVIEW_TURNS", "15"))
-    LLM_USE_FULL_SPEC_PROMPT: bool = os.environ.get("LLM_USE_FULL_SPEC_PROMPT", "False").lower() == "true"
-    LLM_SYSTEM_PROMPT_MAX_CHARS: int = int(os.environ.get("LLM_SYSTEM_PROMPT_MAX_CHARS", "4000"))
+    LLM_MAX_OUTPUT_TOKENS: int = int(_env_with_fallback("LLM_MAX_OUTPUT_TOKENS", default="2048"))
+    LLM_TIMEOUT_SECONDS: int = int(_env_with_fallback("LLM_TIMEOUT_SECONDS", default="3600"))
+    LLM_MAX_INTERVIEW_TURNS: int = int(_env_with_fallback("LLM_MAX_INTERVIEW_TURNS", default="15"))
+    LLM_USE_FULL_SPEC_PROMPT: bool = _env_with_fallback("LLM_USE_FULL_SPEC_PROMPT", default="False").lower() == "true"
+    LLM_SYSTEM_PROMPT_MAX_CHARS: int = int(_env_with_fallback("LLM_SYSTEM_PROMPT_MAX_CHARS", default="4000"))
 
     # Context and RAG settings - NO LIMITS
-    CONTEXT_HISTORY_LIMIT: int = int(os.environ.get("CONTEXT_HISTORY_LIMIT", "1000"))
-    RAG_TOP_K: int = int(os.environ.get("RAG_TOP_K", "10"))
-    RAG_CHUNK_CHAR_LIMIT: int = int(os.environ.get("RAG_CHUNK_CHAR_LIMIT", "2000"))
+    CONTEXT_HISTORY_LIMIT: int = int(_env_with_fallback("CONTEXT_HISTORY_LIMIT", default="1000"))
+    RAG_TOP_K: int = int(_env_with_fallback("RAG_TOP_K", default="10"))
+    RAG_CHUNK_CHAR_LIMIT: int = int(_env_with_fallback("RAG_CHUNK_CHAR_LIMIT", default="2000"))
 
     # Sentence embeddings
-    EMBED_MODEL: str = os.environ.get("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+    EMBED_MODEL: str = _env_with_fallback("EMBED_MODEL", default="sentence-transformers/all-MiniLM-L6-v2")
 
     # Upload paths (resolved relative to this file)
     BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))

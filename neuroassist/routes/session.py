@@ -11,6 +11,7 @@ Session endpoints:
 from __future__ import annotations
 
 from datetime import date, datetime
+import json
 from typing import Any
 
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
@@ -97,12 +98,27 @@ def new_session():
     )
     session_id = str(session_row["id"])
 
+    initial_clinical: dict[str, Any] = {}
+    initial_fields_populated: dict[str, bool] = {}
+    age_at_diagnosis = _age_from_dob(date_of_birth)
+    if age_at_diagnosis is not None:
+        initial_clinical["age_at_diagnosis"] = age_at_diagnosis
+        initial_fields_populated["age_at_diagnosis"] = True
+    if sex:
+        initial_clinical["sex"] = sex
+        initial_fields_populated["sex"] = True
+
     execute_query(
         """
-        INSERT INTO patient_context (patient_id, session_id, completeness_score, fields_populated)
-        VALUES (%s, %s, 0.000, '{}'::jsonb)
+        INSERT INTO patient_context (patient_id, session_id, clinical, completeness_score, fields_populated)
+        VALUES (%s, %s, %s::jsonb, 0.000, %s::jsonb)
         """,
-        (patient_id, session_id),
+        (
+            patient_id,
+            session_id,
+            json.dumps(initial_clinical),
+            json.dumps(initial_fields_populated),
+        ),
     )
 
     if request.is_json:
@@ -218,6 +234,7 @@ def session_state(session_id: str):
             "mrn": str(base.get("mrn") or ""),
             "age": age,
             "sex": str(base.get("sex") or ""),
+            "date_of_birth": _display_date(base.get("date_of_birth")),
         },
         "completeness": {
             "score": completeness,
@@ -225,7 +242,18 @@ def session_state(session_id: str):
             "missing_count": len(missing_fields),
             "status_badge": status_badge,
         },
-        "metrics": _build_metric_cards(imaging),
+        "patient_context": {
+            "symptoms": dict(base.get("symptoms") or {}),
+            "clinical": dict(base.get("clinical") or {}),
+            "genomics": dict(base.get("genomics") or {}),
+            "vasari": dict(base.get("vasari") or {}),
+            "pathology": dict(base.get("pathology") or {}),
+            "labs": dict(base.get("labs") or {}),
+            "treatment_history": dict(base.get("treatment_history") or {}),
+            "fields_populated": fields_populated,
+        },
+        "imaging_available": bool(imaging),
+        "metrics": _build_metric_cards(imaging) if imaging else [],
         "key_fields": _build_key_fields(flat, age),
         "auto_flags": _build_auto_flags(flat, latest_report),
         "provisional_grade": _build_provisional_grade(flat, imaging, latest_report),

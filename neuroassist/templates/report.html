@@ -145,6 +145,100 @@
     color: var(--text-muted);
   }
 
+  .section-card {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .section-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .section-body {
+    font-size: 13px;
+    color: var(--text-dark);
+    line-height: 1.6;
+  }
+
+  .section-body p {
+    margin: 0 0 12px;
+  }
+
+  .report-block {
+    padding: 14px 16px;
+    border: 1px solid var(--blue-border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fbfdff, #f4f9fe);
+  }
+
+  .report-block + .report-block {
+    margin-top: 12px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .detail-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  .detail-value {
+    font-size: 13px;
+    color: var(--text-dark);
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .bullet-list {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .bullet-list li + li {
+    margin-top: 6px;
+  }
+
+  .diff-card {
+    border: 1px solid var(--blue-border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #fff;
+  }
+
+  .diff-card + .diff-card {
+    margin-top: 12px;
+  }
+
+  .probability-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    background: var(--blue-light);
+    border: 1px solid var(--blue-border);
+    margin-bottom: 10px;
+  }
+
+  .markdown-report {
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dark);
+  }
+
   .disclaimer {
     font-size: 12px;
     color: var(--text-muted);
@@ -167,6 +261,9 @@
     }
     .mini-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .detail-grid {
+      grid-template-columns: 1fr;
     }
   }
 
@@ -228,6 +325,15 @@
   {% if '3' in grade_label %}{% set grade_class = 'grade-3' %}{% endif %}
   {% if '2' in grade_label %}{% set grade_class = 'grade-2' %}{% endif %}
   {% if '1' in grade_label %}{% set grade_class = 'grade-1' %}{% endif %}
+  {% set structured = report.structured_report if report.structured_report is mapping else {} %}
+  {% set header = structured.header if structured and structured.header is mapping else {} %}
+  {% set patient_summary = structured.patient_clinical_summary if structured and structured.patient_clinical_summary is mapping else {} %}
+  {% set imaging_findings = structured.imaging_findings if structured and structured.imaging_findings is mapping else {} %}
+  {% set molecular = structured.molecular_profile_integration if structured and structured.molecular_profile_integration is mapping else {} %}
+  {% set grade_assessment = structured.grade_assessment if structured and structured.grade_assessment is mapping else {} %}
+  {% set survival = structured.survival_estimate if structured and structured.survival_estimate is mapping else {} %}
+  {% set treatment = structured.treatment_considerations if structured and structured.treatment_considerations is mapping else {} %}
+  {% set uncertainty = structured.uncertainty_limitations if structured and structured.uncertainty_limitations is mapping else {} %}
 
   <div class="report-grid">
     <section>
@@ -246,11 +352,11 @@
         </div>
 
         {% if report.report_text %}
-        <div class="report-line">{{ report.report_text }}</div>
+        <div class="report-line" style="white-space:pre-wrap;">{{ report.report_text }}</div>
         {% endif %}
 
         {% if report.recommendation_summary %}
-        <div class="report-line">{{ report.recommendation_summary }}</div>
+        <div class="report-line"><strong>Action summary:</strong> {{ report.recommendation_summary }}</div>
         {% endif %}
 
         <div class="section-label">Favorable factors</div>
@@ -276,17 +382,309 @@
         </div>
       </div>
 
-      <div class="card mt-16">
-        <div class="section-label">Treatment flags</div>
-        {% for flag in report.treatment_flags or [] %}
-          {% set severity = (flag.severity or 'info') %}
-          <div class="flag {{ severity }}">
-            <strong>{{ severity|upper }}</strong>
-            {% if flag.message %} · {{ flag.message }}{% elif flag.text %} · {{ flag.text }}{% endif %}
+      <div class="section-stack mt-16">
+        <div class="card section-card">
+          <div class="section-label">Patient Clinical Summary</div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Demographics</div>
+              <div class="detail-value">{{ patient_summary.demographics or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Presenting Symptoms</div>
+              <div class="detail-value">{{ patient_summary.presenting_symptoms or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Relevant History</div>
+              <div class="detail-value">{{ patient_summary.relevant_history or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Current Medications</div>
+              <div class="detail-value">{{ patient_summary.current_medications or 'Not provided' }}</div>
+            </div>
           </div>
-        {% else %}
-          <div class="muted-note">No treatment flags recorded.</div>
-        {% endfor %}
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Imaging Findings</div>
+          <div class="report-block">
+            <div class="detail-label">Tumor Volumes</div>
+            {% if imaging_findings.tumor_volumes %}
+            <ul class="bullet-list">
+              {% for item in imaging_findings.tumor_volumes %}
+              <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Morphology</div>
+            <div class="detail-value">{{ imaging_findings.morphology or 'Not provided' }}</div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Localization</div>
+            <div class="detail-value">{{ imaging_findings.localization or 'Not provided' }}</div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Radiomics Flags</div>
+            {% if imaging_findings.radiomics_flags %}
+            <ul class="bullet-list">
+              {% for item in imaging_findings.radiomics_flags %}
+              <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Differential Diagnosis</div>
+          {% for item in structured.differential_diagnosis or [] %}
+          <div class="diff-card">
+            <div class="probability-pill">{{ item.probability or 'Unspecified' }}</div>
+            <div class="report-line"><strong>{{ item.diagnosis }}</strong></div>
+            <div class="detail-label">Supporting</div>
+            {% if item.supporting %}
+            <ul class="bullet-list">
+              {% for support in item.supporting %}
+              <li>{{ support }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+            <div class="detail-label" style="margin-top:10px;">Against</div>
+            {% if item.against %}
+            <ul class="bullet-list">
+              {% for against in item.against %}
+              <li>{{ against }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="muted-note">No differential diagnosis entries were generated.</div>
+          {% endfor %}
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Molecular Profile Integration</div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">IDH Status</div>
+              <div class="detail-value">{{ molecular.idh_status or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">MGMT Methylation</div>
+              <div class="detail-value">{{ molecular.mgmt_methylation or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">1p/19q Status</div>
+              <div class="detail-value">{{ molecular.codeletion_1p19q or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Other Markers</div>
+              <div class="detail-value">{{ molecular.other_markers or 'Not provided' }}</div>
+            </div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Molecular Grade Inference</div>
+            <div class="detail-value">{{ molecular.molecular_grade or 'Not provided' }}</div>
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Grade Assessment</div>
+          <div class="report-block">
+            <div class="detail-label">Likely WHO Grade</div>
+            <div class="detail-value">{{ grade_assessment.likely_who_grade or ('WHO Grade ' ~ grade_label if grade_label else 'Indeterminate') }}</div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Rationale</div>
+            {% if grade_assessment.rationale %}
+            <ul class="bullet-list">
+              {% for item in grade_assessment.rationale %}
+              <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+          </div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Confidence</div>
+              <div class="detail-value">{{ grade_assessment.confidence or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Confidence Explanation</div>
+              <div class="detail-value">{{ grade_assessment.confidence_explanation or 'Not provided' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Survival Estimate</div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Reference Class</div>
+              <div class="detail-value">{{ survival.reference_class or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Median Overall Survival</div>
+              <div class="detail-value">{{ survival.median_os or report.estimated_median_months or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">2-Year Overall Survival</div>
+              <div class="detail-value">{{ survival.two_year_os or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Literature Basis</div>
+              {% if survival.literature_basis %}
+              <ul class="bullet-list">
+                {% for item in survival.literature_basis %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="detail-value">Not provided</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Favorable Factors</div>
+              {% if survival.favorable_factors %}
+              <ul class="bullet-list">
+                {% for item in survival.favorable_factors %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="detail-value">Not provided</div>
+              {% endif %}
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Adverse Factors</div>
+              {% if survival.adverse_factors %}
+              <ul class="bullet-list">
+                {% for item in survival.adverse_factors %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="detail-value">Not provided</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Treatment Considerations</div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Surgical</div>
+              <div class="detail-value">{{ treatment.surgical or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Radiation</div>
+              <div class="detail-value">{{ treatment.radiation or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Chemotherapy</div>
+              <div class="detail-value">{{ treatment.chemotherapy or 'Not provided' }}</div>
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Monitoring</div>
+              <div class="detail-value">{{ treatment.monitoring or 'Not provided' }}</div>
+            </div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">MDT Referral</div>
+            <div class="detail-value">{{ treatment.mdt_referral or 'Not provided' }}</div>
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Uncertainty And Limitations</div>
+          <div class="detail-grid">
+            <div class="report-block">
+              <div class="detail-label">Model Limitations</div>
+              {% if uncertainty.model_limitations %}
+              <ul class="bullet-list">
+                {% for item in uncertainty.model_limitations %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="detail-value">Not provided</div>
+              {% endif %}
+            </div>
+            <div class="report-block">
+              <div class="detail-label">Missing Data</div>
+              {% if uncertainty.missing_data %}
+              <ul class="bullet-list">
+                {% for item in uncertainty.missing_data %}
+                <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="detail-value">Not provided</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="report-block">
+            <div class="detail-label">Recommended Tests</div>
+            {% if uncertainty.recommended_tests %}
+            <ul class="bullet-list">
+              {% for item in uncertainty.recommended_tests %}
+              <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="detail-value">Not provided</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-label">Summary For MDT</div>
+          {% if structured.summary_for_mdt %}
+          <ul class="bullet-list">
+            {% for item in structured.summary_for_mdt %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="detail-value">Not provided</div>
+          {% endif %}
+        </div>
+
+        {% if report.report_markdown %}
+        <div class="card section-card">
+          <div class="section-label">Full Narrative Report</div>
+          <div class="markdown-report">{{ report.report_markdown }}</div>
+        </div>
+        {% endif %}
+
+        <div class="card section-card">
+          <div class="section-label">Treatment Flags</div>
+          {% for flag in report.treatment_flags or [] %}
+            {% set severity = (flag.severity or 'info') %}
+            <div class="flag {{ severity }}">
+              <strong>{{ severity|upper }}</strong>
+              {% if flag.message %} · {{ flag.message }}{% elif flag.text %} · {{ flag.text }}{% endif %}
+            </div>
+          {% else %}
+            <div class="muted-note">No treatment flags recorded.</div>
+          {% endfor %}
+        </div>
       </div>
     </section>
 
@@ -337,8 +735,19 @@
         <div class="section-label">Report metadata</div>
         <div class="report-line">Session ID: <code>{{ session.session_id }}</code></div>
         <div class="report-line">Status: {{ session.status or 'active' }}</div>
+        {% if header.patient_case_id %}
+        <div class="report-line">Case ID: {{ header.patient_case_id }}</div>
+        {% endif %}
+        {% if header.ai_model %}
+        <div class="report-line">AI model: {{ header.ai_model }}</div>
+        {% endif %}
+        {% if header.report_version %}
+        <div class="report-line">Report version: {{ header.report_version }}</div>
+        {% endif %}
         {% if report.created_at %}
         <div class="report-line">Generated at: {{ report.created_at }}</div>
+        {% elif header.report_generated %}
+        <div class="report-line">Generated at: {{ header.report_generated }}</div>
         {% endif %}
       </div>
     </aside>
@@ -347,7 +756,7 @@
   {% else %}
   <div class="card">
     <div class="report-line">No diagnostic report generated yet.</div>
-    <div class="muted-note">Complete the clinical interview in the session page to unlock report generation.</div>
+    <div class="muted-note">Complete the clinical intake form in the session page to unlock report generation.</div>
     <div class="mt-16">
       <a class="btn btn-primary" href="/session/{{ session.session_id }}">Return to session</a>
     </div>

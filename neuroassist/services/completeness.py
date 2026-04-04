@@ -4,7 +4,7 @@ services/completeness.py
 Computes the weighted completeness score for a patient diagnostic context.
 
 IMPORTANT: This is the AUTHORITATIVE scorer — the LLM never computes this.
-Called after every /chat request. Result stored in patient_context.completeness_score.
+Called after each structured clinical intake submission. Result stored in patient_context.completeness_score.
 """
 
 from db.connection import execute_query
