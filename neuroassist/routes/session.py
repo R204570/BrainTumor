@@ -257,8 +257,6 @@ def session_state(session_id: str):
         "key_fields": _build_key_fields(flat, age),
         "auto_flags": _build_auto_flags(flat, latest_report),
         "provisional_grade": _build_provisional_grade(flat, imaging, latest_report),
-        "conversation": _load_conversation(session_id),
-        "pending_question": None,
     }
 
     return jsonify(payload)
@@ -709,91 +707,3 @@ def _build_provisional_grade(
         "is_unlocked": conf >= 0.75,
     }
 
-
-def _load_conversation(session_id: str) -> list[dict[str, Any]]:
-    rows = execute_query(
-        """
-        SELECT role, content, content_json, created_at
-        FROM messages
-        WHERE session_id = %s
-        ORDER BY created_at ASC
-        LIMIT 250
-        """,
-        (session_id,),
-        fetch="all",
-    ) or []
-
-    out: list[dict[str, Any]] = []
-    for row in rows:
-        role = str(row.get("role") or "assistant")
-        created_at = row.get("created_at")
-        payload = row.get("content_json")
-
-        if role == "assistant" and isinstance(payload, dict):
-            out.append(
-                {
-                    "role": role,
-                    "kind": "json",
-                    "payload": payload,
-                    "created_at": _iso(created_at),
-                }
-            )
-        elif role == "tool" and isinstance(payload, dict):
-            out.append(
-                {
-                    "role": role,
-                    "kind": "tool",
-                    "payload": payload,
-                    "text": str(row.get("content") or ""),
-                    "created_at": _iso(created_at),
-                }
-            )
-        else:
-            out.append(
-                {
-                    "role": role,
-                    "kind": "text",
-                    "text": str(row.get("content") or ""),
-                    "created_at": _iso(created_at),
-                }
-            )
-
-    return out
-
-
-def _pending_question_payload(session_id: str) -> dict[str, Any] | None:
-    row = execute_query(
-        """
-        SELECT question_id
-        FROM questions_asked
-        WHERE session_id = %s AND answered_at IS NULL
-        ORDER BY id DESC
-        LIMIT 1
-        """,
-        (session_id,),
-        fetch="one",
-    )
-
-    if not row or not row.get("question_id"):
-        return None
-
-    qid = str(row["question_id"])
-    msg = execute_query(
-        """
-        SELECT content_json
-        FROM messages
-        WHERE session_id = %s
-          AND role = 'assistant'
-          AND content_json->>'question_id' = %s
-        ORDER BY created_at DESC
-        LIMIT 1
-        """,
-        (session_id, qid),
-        fetch="one",
-    )
-
-    if not msg:
-        return {"question_id": qid}
-
-    payload = msg.get("content_json")
-    return payload if isinstance(payload, dict) else {"question_id": qid}
