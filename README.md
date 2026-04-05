@@ -98,6 +98,101 @@ Important variables in the root `.env`:
 - `EMBED_MODEL`
 - `PORT`
 
+## Database Setup
+
+The app expects PostgreSQL and reads its connection string from the root `.env`.
+
+Current default value:
+
+```env
+DATABASE_URL=postgresql://postgres:Admin%40123@localhost:5433/neuroassist
+```
+
+Important notes:
+
+- `Admin%40123` is the URL-encoded form of the password `Admin@123`
+- the README example assumes PostgreSQL is listening on port `5433`
+- if your local PostgreSQL uses the default port `5432`, update `DATABASE_URL` in `.env`
+- the app can work with plain PostgreSQL even if `pgvector` is not installed
+
+### 1. Make sure PostgreSQL is running
+
+Verify that your server is up and reachable with `psql`:
+
+```powershell
+psql -h localhost -p 5433 -U postgres -d postgres
+```
+
+If your server is on a different port, use that port instead and update `.env`.
+
+### 2. Ensure the configured user and password are valid
+
+The repo currently expects:
+
+- username: `postgres`
+- password: `Admin@123`
+- database name: `neuroassist`
+
+If your local PostgreSQL credentials are different, change the root `.env` instead of changing code.
+
+### 3. Create the database manually if you want to pre-create it
+
+This is optional because the bootstrap script can create it for you, but if you want to do it yourself:
+
+```sql
+CREATE DATABASE neuroassist;
+```
+
+You can run that inside `psql` after connecting to the `postgres` database.
+
+### 4. Apply the schema and initialize tables
+
+From inside `neuroassist/` run:
+
+```powershell
+cd neuroassist
+python -m db.init_db
+```
+
+This will:
+
+- create the target database if it does not already exist
+- initialize the connection pool
+- apply [`schema.sql`](e:/Projects/Gioblastoma/neuroassist/db/schema.sql)
+- run lightweight compatibility updates for older local databases
+
+### 5. Seed the knowledge base used by RAG
+
+Still from inside `neuroassist/`:
+
+```powershell
+python -m scripts.seed_knowledge_base
+```
+
+This inserts the curated WHO 2021, VASARI, and RANO chunks into `knowledge_chunks`.
+
+### 6. Optional: install `pgvector`
+
+`pgvector` is supported but not required.
+
+- if `pgvector` is available, `knowledge_chunks.embedding` is created as `vector(384)`
+- if it is not available, the schema falls back to `DOUBLE PRECISION[]`
+
+So the project still runs without `pgvector`; vector search simply becomes less optimized.
+
+### 7. Quick verification
+
+After setup, these tables should exist:
+
+- `patients`
+- `sessions`
+- `patient_context`
+- `messages`
+- `questions_asked`
+- `imaging_reports`
+- `diagnostic_reports`
+- `knowledge_chunks`
+
 ## Database Bootstrap
 
 Run these from inside `neuroassist/`:
