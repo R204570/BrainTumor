@@ -1,4 +1,4 @@
-# Gioblastoma / NeuroAssist
+# NeuroAssist
 
 NeuroAssist is a Flask-based clinical decision support prototype for brain tumor workflows. It combines MRI ingestion, 3D Attention U-Net segmentation, derived imaging metrics, structured neuro-oncology intake, lightweight RAG retrieval, and Groq-backed report generation into a single local project.
 
