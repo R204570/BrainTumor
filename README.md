@@ -249,6 +249,5 @@ Current tests cover:
 ## Notes And Limitations
 
 - The report generator is wired to Groq in the current code path.
-- Ollama settings remain in `.env` as an optional legacy fallback, but they are not the primary runtime path.
 - Large data folders, model weights, uploads, and generated static assets are intentionally ignored by git.
 - The preprocessing scripts in `Input_preprocessing/` are utility scripts and are not part of the Flask request path except for DICOM-to-NIfTI conversion.
