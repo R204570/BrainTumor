@@ -9,7 +9,7 @@ Implemented state:
 ## Setup
 
 ```powershell
-cd e:\Projects\Gioblastoma\neuroassist
+cd e:\Projects\Gioblastoma
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
