@@ -19,6 +19,8 @@ from rag_prompts import build_report_prompt, build_system_prompt
 
 logger = logging.getLogger(__name__)
 
+REPORT_SHORT_TEXT_LIMIT = 200
+
 
 class LLMResponseError(RuntimeError):
     """Raised when LLM output cannot be parsed as required JSON."""
@@ -59,6 +61,10 @@ def _extract_json_object(text: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             return {}
     return {}
+
+
+def _clip_text(value: Any, limit: int = REPORT_SHORT_TEXT_LIMIT) -> str:
+    return str(value or "").strip()[:limit]
 
 
 def _validate_report_response(data: dict[str, Any]) -> dict[str, Any]:
@@ -108,9 +114,9 @@ def _validate_report_response(data: dict[str, Any]) -> dict[str, Any]:
         "who_grade_predicted": normalized_grade,
         "diagnosis_label": diagnosis_label,
         "confidence_score": confidence_score,
-        "survival_category": str(data.get("survival_category") or "").strip(),
+        "survival_category": _clip_text(data.get("survival_category")),
         "survival_score": int(data.get("survival_score") or 0),
-        "estimated_median_months": str(data.get("estimated_median_months") or "").strip(),
+        "estimated_median_months": _clip_text(data.get("estimated_median_months")),
         "factors_favorable": [
             str(item).strip()
             for item in (data.get("factors_favorable") or [])

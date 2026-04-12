@@ -132,8 +132,8 @@ def ensure_schema_compatibility() -> None:
     """Apply lightweight ALTERs for older local databases."""
     statements = [
         "ALTER TABLE diagnostic_reports ALTER COLUMN who_grade_predicted TYPE VARCHAR(20)",
-        "ALTER TABLE diagnostic_reports ALTER COLUMN survival_category TYPE VARCHAR(50)",
-        "ALTER TABLE diagnostic_reports ALTER COLUMN estimated_median_months TYPE VARCHAR(50)",
+        "ALTER TABLE diagnostic_reports ALTER COLUMN survival_category TYPE VARCHAR(200)",
+        "ALTER TABLE diagnostic_reports ALTER COLUMN estimated_median_months TYPE VARCHAR(200)",
     ]
 
     conn = get_conn()

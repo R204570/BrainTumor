@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from services.context_builder import build_input_context
-from services.llm import Config, LLMServiceError, call_final_report_model
+from services.llm import Config, LLMServiceError, REPORT_SHORT_TEXT_LIMIT, _validate_report_response, call_final_report_model
 
 
 def _mock_http_response(content: str):
@@ -174,6 +174,27 @@ class TestGroqLLM(unittest.TestCase):
                     input_context="- Patient ID: CASE-3",
                     conversation_messages=[],
                 )
+
+    def test_validate_report_response_clips_short_report_fields(self):
+        long_text = "x" * (REPORT_SHORT_TEXT_LIMIT + 37)
+        result = _validate_report_response(
+            {
+                "mode": "final_report",
+                "report_text": "Valid report text.",
+                "who_grade_predicted": "Grade 4",
+                "diagnosis_label": "Glioblastoma",
+                "confidence_score": 0.95,
+                "survival_category": long_text,
+                "survival_score": 70,
+                "estimated_median_months": long_text,
+                "factors_favorable": [],
+                "factors_unfavorable": [],
+                "treatment_flags": [],
+            }
+        )
+
+        self.assertEqual(len(result["survival_category"]), REPORT_SHORT_TEXT_LIMIT)
+        self.assertEqual(len(result["estimated_median_months"]), REPORT_SHORT_TEXT_LIMIT)
 
     def test_build_input_context_includes_registered_intake_profile(self):
         def fake_query(query, params=None, fetch=None):

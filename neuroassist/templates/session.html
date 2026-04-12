@@ -181,6 +181,13 @@
     line-height: 1.55;
   }
 
+  .char-counter {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
   .chip-list {
     display: flex;
     flex-wrap: wrap;
@@ -478,11 +485,11 @@
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label" for="comorbidities">Comorbidities</label>
-                <textarea class="form-input" id="comorbidities" placeholder="Hypertension, diabetes, anticoagulation, immunosuppression, etc."></textarea>
+                <textarea class="form-input" id="comorbidities" maxlength="200" placeholder="Hypertension, diabetes, anticoagulation, immunosuppression, etc."></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label" for="current_medications">Current medications</label>
-                <textarea class="form-input" id="current_medications" placeholder="Steroids, anticonvulsants, anticoagulants, other active medications"></textarea>
+                <textarea class="form-input" id="current_medications" maxlength="200" placeholder="Steroids, anticonvulsants, anticoagulants, other active medications"></textarea>
               </div>
             </div>
           </div>
@@ -491,7 +498,7 @@
             <div class="section-title">Symptoms And Presentation</div>
             <div class="form-group">
               <label class="form-label" for="presenting_symptoms">Presenting symptoms and clinical story</label>
-              <textarea class="form-input" id="presenting_symptoms" placeholder="Headache, focal deficits, seizures, aphasia, cognitive decline, onset pattern, duration, progression"></textarea>
+              <textarea class="form-input" id="presenting_symptoms" maxlength="200" placeholder="Headache, focal deficits, seizures, aphasia, cognitive decline, onset pattern, duration, progression"></textarea>
             </div>
             <div class="form-grid-3">
               <div class="form-group">
@@ -508,7 +515,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="headache_pattern">Headache pattern</label>
-                <input class="form-input" type="text" id="headache_pattern" placeholder="Progressive morning headache, pressure-like, etc.">
+                <input class="form-input" type="text" id="headache_pattern" maxlength="200" placeholder="Progressive morning headache, pressure-like, etc.">
               </div>
             </div>
             <div class="form-grid-3">
@@ -591,7 +598,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="neurological_exam">Neurological examination / bedside findings</label>
-              <textarea class="form-input" id="neurological_exam" placeholder="Laterality, aphasia, neglect, cranial nerve findings, gait, sensory findings, raised ICP signs"></textarea>
+              <textarea class="form-input" id="neurological_exam" maxlength="200" placeholder="Laterality, aphasia, neglect, cranial nerve findings, gait, sensory findings, raised ICP signs"></textarea>
             </div>
           </div>
 
@@ -600,11 +607,11 @@
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label" for="prior_tumor_history">Prior tumor or CNS history</label>
-                <textarea class="form-input" id="prior_tumor_history" placeholder="Prior glioma, prior biopsy, radiation exposure, NF1/NF2, recurrent disease, prior imaging context"></textarea>
+                <textarea class="form-input" id="prior_tumor_history" maxlength="200" placeholder="Prior glioma, prior biopsy, radiation exposure, NF1/NF2, recurrent disease, prior imaging context"></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label" for="family_history">Family history / special risk factors</label>
-                <textarea class="form-input" id="family_history" placeholder="Family history of glioma, inherited syndrome, immunocompromise, pregnancy, special considerations"></textarea>
+                <textarea class="form-input" id="family_history" maxlength="200" placeholder="Family history of glioma, inherited syndrome, immunocompromise, pregnancy, special considerations"></textarea>
               </div>
             </div>
             <div class="form-grid-3">
@@ -677,7 +684,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="histology_type">Histology type</label>
-                <input class="form-input" type="text" id="histology_type" placeholder="Astrocytoma, GBM, oligodendroglioma, pending">
+                <input class="form-input" type="text" id="histology_type" maxlength="200" placeholder="Astrocytoma, GBM, oligodendroglioma, pending">
               </div>
               <div class="form-group">
                 <label class="form-label" for="necrosis_on_histology">Necrosis on histology</label>
@@ -708,7 +715,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="pathology_notes">Pathology or molecular notes</label>
-              <textarea class="form-input" id="pathology_notes" placeholder="Biopsy date, frozen section, methylation classifier, special notes"></textarea>
+              <textarea class="form-input" id="pathology_notes" maxlength="200" placeholder="Biopsy date, frozen section, methylation classifier, special notes"></textarea>
             </div>
           </div>
 
@@ -717,7 +724,7 @@
             <div class="form-grid-3">
               <div class="form-group">
                 <label class="form-label" for="enhancement_pattern">Enhancement pattern</label>
-                <input class="form-input" type="text" id="enhancement_pattern" placeholder="Ring-enhancing, patchy, minimal, nodular">
+                <input class="form-input" type="text" id="enhancement_pattern" maxlength="200" placeholder="Ring-enhancing, patchy, minimal, nodular">
               </div>
               <div class="form-group">
                 <label class="form-label" for="ring_enhancing">Ring-enhancing</label>
@@ -790,7 +797,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="prior_surgery_type">Prior surgery type</label>
-                <input class="form-input" type="text" id="prior_surgery_type" placeholder="Craniotomy, biopsy, none">
+                <input class="form-input" type="text" id="prior_surgery_type" maxlength="200" placeholder="Craniotomy, biopsy, none">
               </div>
               <div class="form-group">
                 <label class="form-label" for="prior_temozolomide">Prior temozolomide</label>
@@ -838,12 +845,12 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="additional_imaging_notes">Additional imaging notes</label>
-                <input class="form-input" type="text" id="additional_imaging_notes" placeholder="Mass effect, diffusion restriction, spectroscopy, hemorrhage">
+                <input class="form-input" type="text" id="additional_imaging_notes" maxlength="200" placeholder="Mass effect, diffusion restriction, spectroscopy, hemorrhage">
               </div>
             </div>
             <div class="form-group">
               <label class="form-label" for="clinician_notes">Additional clinician notes</label>
-              <textarea class="form-input" id="clinician_notes" placeholder="Anything else the reasoning/report should consider for MDT review"></textarea>
+              <textarea class="form-input" id="clinician_notes" maxlength="200" placeholder="Anything else the reasoning/report should consider for MDT review"></textarea>
             </div>
           </div>
 
@@ -902,9 +909,26 @@
 {% block scripts %}
 <script>
   const SESSION_ID = {{ session_id|tojson }};
+  const FREE_TEXT_LIMIT = 200;
+  const FREE_TEXT_FIELD_IDS = [
+    'comorbidities',
+    'current_medications',
+    'presenting_symptoms',
+    'headache_pattern',
+    'neurological_exam',
+    'prior_tumor_history',
+    'family_history',
+    'histology_type',
+    'pathology_notes',
+    'enhancement_pattern',
+    'prior_surgery_type',
+    'additional_imaging_notes',
+    'clinician_notes',
+  ];
   let stateCache = null;
 
   document.addEventListener('DOMContentLoaded', () => {
+    applyFreeTextLimits();
     document.getElementById('intake-form').addEventListener('submit', submitIntakeForm);
     loadState();
   });
@@ -1282,7 +1306,53 @@
     if (!element || value === null || value === undefined) {
       return;
     }
-    element.value = value;
+    element.value = String(value).slice(0, getTextLimit(id));
+    updateTextCounter(element);
+  }
+
+  function applyFreeTextLimits() {
+    FREE_TEXT_FIELD_IDS.forEach((id) => {
+      const element = document.getElementById(id);
+      if (!element) {
+        return;
+      }
+
+      const limit = getTextLimit(id);
+      element.maxLength = limit;
+
+      const counter = document.createElement('div');
+      counter.className = 'char-counter';
+      counter.id = `${id}-counter`;
+      element.insertAdjacentElement('afterend', counter);
+
+      element.addEventListener('input', () => updateTextCounter(element));
+      updateTextCounter(element);
+    });
+  }
+
+  function getTextLimit(id) {
+    const element = document.getElementById(id);
+    if (!element) {
+      return FREE_TEXT_LIMIT;
+    }
+    return Number(element.maxLength) > 0 ? Number(element.maxLength) : FREE_TEXT_LIMIT;
+  }
+
+  function updateTextCounter(element) {
+    if (!element) {
+      return;
+    }
+
+    const counter = document.getElementById(`${element.id}-counter`);
+    if (!counter) {
+      return;
+    }
+
+    const limit = Number(element.maxLength) > 0 ? Number(element.maxLength) : FREE_TEXT_LIMIT;
+    if (element.value.length > limit) {
+      element.value = element.value.slice(0, limit);
+    }
+    counter.textContent = `${element.value.length}/${limit} characters`;
   }
 
   function boolToSelect(value) {
