@@ -3,13 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
-
-from routes.upload import (
-    _detect_modality_token,
-    _match_modality_files,
-    _prepare_nifti_case_input,
-)
-
+from routes.upload import _detect_modality_token ,_match_modality_files ,_prepare_nifti_case_input
 
 class TestUploadModalityAssembly(unittest.TestCase):
     def test_detect_modality_token_supports_aliases(self):
